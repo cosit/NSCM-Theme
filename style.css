@@ -1,0 +1,130 @@
+/*
+Theme Name: 	NSCM - Child of College
+Theme URI:		http://communication.ucf.edu/
+Description:	Nicholson School of Communication and Media Theme
+Author:			Mannong Pang
+Template:		Colleges-Theme-Modded
+Version:		1.0.1
+License:		GNU General Public License v2 or later
+License URI:	http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain:	Nicholson School of Communication and Media Theme
+*/
+
+.ucf-post-list-item a { color:#000000; }
+
+.home-header-title {
+   text-shadow: 1px 1px 4px #000;
+}
+
+.home-header-title-wrapper {
+	background-color: inherit;
+	text-align:left;	
+}
+
+.home-header-title{
+	font-family: "UCF Condensed Alt",sans-serif; 
+	font-size: 4.5rem;
+}
+
+.fa-angle-double-down{
+	display: none !important;
+}
+
+.header-content>.flex-column {
+	margin-left:0px;
+}
+
+@media only screen and (max-width: 575px) {
+	.home-header-title-wrapper {
+    	display: none;
+	}
+}
+
+/* Wrap Site Title */
+.site-navbar .navbar-brand {
+	white-space: normal;
+}  
+
+/* Menu Adjustments - Have last dropdown menu it face left */
+@media only screen and (min-width : 980px) {
+	#menu-main-menu li .dropdown-menu {
+		min-width: 17rem;
+	}
+	#menu-main-menu li:last-of-type .dropdown-menu {
+		  text-align: right;
+	    right: 0;
+	    left: auto;
+	    min-width: 12rem;
+	}
+	#menu-main-menu li:last-of-type .dropdown-menu .dropdown-item {
+		padding-left: 0;
+	}
+}
+
+/* UCF News Modification */
+@media only screen and (max-width: 770px) {
+	.ucf-news.modern .ucf-news-thumbnail {
+		width: 100%;
+
+	}	
+	.ucf-news.modern .ucf-news-item-content {
+		width: 100%;
+	}
+}
+
+/* WordPress Gallery */
+.gallery {
+	margin-left: -0.5em;
+	margin-right: -0.5em;
+}
+
+.gallery:after {
+	display: table;
+	content: "";
+	clear: both;
+}
+
+.gallery-item {
+	margin: 0;
+	float: left;
+	padding: 0.5em;
+}
+
+.gallery-columns-1 .gallery-item {   
+    float: none;
+}
+.gallery-columns-2 .gallery-item {
+    width: 50%
+}
+.gallery-columns-3 .gallery-item {
+    width: 33.3333%
+}
+.gallery-columns-4 .gallery-item {
+    width: 25%
+}
+.gallery-columns-5 .gallery-item {
+    width: 20%
+}
+.gallery-columns-6 .gallery-item {
+    width: 16.6667%
+}
+.gallery-columns-7 .gallery-item {
+    width: 14.2857%
+}
+.gallery-columns-8 .gallery-item {
+    width: 12.5%
+}
+.gallery-columns-9 .gallery-item {
+    width: 11.1111%
+}
+
+.gallery-columns-2 .gallery-item:nth-child(2n+1),
+.gallery-columns-3 .gallery-item:nth-child(3n+1),
+.gallery-columns-4 .gallery-item:nth-child(4n+1),
+.gallery-columns-5 .gallery-item:nth-child(5n+1),
+.gallery-columns-6 .gallery-item:nth-child(6n+1),
+.gallery-columns-7 .gallery-item:nth-child(7n+1),
+.gallery-columns-8 .gallery-item:nth-child(8n+1),
+.gallery-columns-9 .gallery-item:nth-child(9n+1) {
+	clear: left;
+}
