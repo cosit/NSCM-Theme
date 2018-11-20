@@ -47,7 +47,7 @@ add_action( 'rest_post_query', 'add_tax_query_to_posts_endpoint', 2, 10 );
 function cah_jobs_check($atts){
 	
 	$atts = shortcode_atts( array(
-		'dept' => 'CAH-',
+		'dept' => '/CAH\-/',
 		'jumb_class'=>'bg-inverse'
 	), $atts);
 	
@@ -69,7 +69,7 @@ function cah_jobs_check($atts){
 			
 			foreach($xmlObject->entry as $entry) {	
 				
-			if (strpos($entry->author->name,$atts['dept']) !== false || strpos($entry->title,$atts['dept']) !== false )
+			if (preg_match($atts['dept'],$entry->author->name))
 				{
 				if($i==1)
 				$outputHTML .="<div class='jumbotron {$atts['jumb_class']} mt-0 mb-0'>
@@ -96,7 +96,7 @@ function cah_job_section_check($atts){
 		'class'=>'auto-section',
 		'title'=>'Jobs',
 		'section_id'=>'jobs',
-		'dept' => 'CAH-',
+		'dept' => '/CAH\-/',
 		'jumb_class'=>'bg-inverse'
 	), $atts);
 	$jobs_opening = "";
