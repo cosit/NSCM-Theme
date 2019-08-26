@@ -122,4 +122,72 @@ function cah_job_section_check($atts){
 }
 add_shortcode( 'cah_job_section', 'cah_job_section_check' );
 //end of jobs section
+
+// Custom get_header_title function
+function get_header_title( $obj ) {
+	$title = '';
+
+	if ( is_home() || is_front_page() ) {
+		$title = get_field( 'homepage_header_title', $obj->ID );
+
+		if ( ! $title ) {
+			$title = get_bloginfo( 'name' );
+		}
+	}
+	elseif ( is_search() ) {
+		$title = __( 'Search Results for:' );
+		$title .= ' ' . esc_html( stripslashes( get_search_query() ) );
+	}
+	elseif ( is_404() ) {
+		$title = __( '404 Not Found' );
+	}
+	elseif ( is_single() || is_page() ) {
+		if ( $obj->post_type === 'person' ) {
+			$title = get_field( 'page_header_title', $obj->ID ) ?: get_theme_mod_or_default( 'person_header_title' );
+		}
+		else {
+			$title = get_field( 'page_header_title', $obj->ID );
+		}
+
+		if ( ! $title ) {
+			$title = single_post_title( '', false );
+		}
+	}
+	elseif ( is_category() ) {
+		$title = __( 'Category Archives:' );
+		$title .= ' ' . single_term_title( '', false );
+	}
+	elseif ( is_tag() ) {
+		$title = __( 'Tag Archives:' );
+		$title .= ' ' . single_term_title( '', false );
+	}
+	elseif ( is_tax() ) {
+		$tax_name = '';
+		$tax = get_taxonomy( $obj->taxonomy );
+		if ( $tax ) {
+			$tax_name = $tax->labels->singular_name . ' ';
+		}
+		$title = __( $tax_name . 'Archives:' );
+		$title .= ' ' . single_term_title( '', false );
+	}
+
+	return $title;
+}
+
+// Custom get_header_subtitle function
+function get_header_subtitle( $obj ) {
+	$subtitle = '';
+
+	if ( is_single() || is_page() ) {
+		if ( $obj->post_type === 'person' ) {
+
+			$subtitle = get_field( 'page_header_subtitle', $obj->ID ) ?: get_theme_mod_or_default( 'person_header_subtitle' );			
+		}
+		else {
+			$subtitle = get_field( 'page_header_subtitle', $obj->ID );
+		}
+	}
+
+	return $subtitle;
+}
 ?>
