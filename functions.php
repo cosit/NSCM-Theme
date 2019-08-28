@@ -190,4 +190,47 @@ function get_header_subtitle( $obj ) {
 
 	return $subtitle;
 }
-?>
+
+/**
+ * Generate custom search form using Athena Framework and Bootstrap
+ *
+ * @param string $form Form HTML.
+ * @return string Modified form HTML.
+ */
+function nscm_my_search_form( $form ) {
+    $form = '<form role="search" method="get" id="searchform" class="form-inline" action="' . home_url( '/' ) . '" >
+    <div class="input-group w-100"><input type="text" value="' . get_search_query() . '" name="s" id="s" class="form-control" placeholder="Search for" />
+    <div class="input-group-append"><button type="submit" id="searchsubmit" value="'. esc_attr__( 'Search' ) .'" class="btn btn-primary" />Search</button></div>
+    </div>
+    </form><hr class="mt-5 mb-4"/>';
+ 
+    return $form;
+}
+add_filter( 'get_search_form', 'nscm_my_search_form' );
+
+/**
+ * Create shortcode for generating custom search form
+ **/
+function nscm_show_search_form() {
+	return get_search_form();
+}
+add_shortcode('show_search_form', 'nscm_show_search_form');
+
+/**
+ * Exclude the UCF Section CPT from search results
+ **/
+function nscm_exclude_cpts_search() {
+	global $wp_post_types;
+	if( post_type_exists( 'ucf_section' ) )
+		$wp_post_types['ucf_section']->exclude_from_search = true;
+}
+add_action( 'init', 'nscm_exclude_cpts_search' );
+
+/**
+ * Add a Bootstrap class to the Previous and Next pagination links
+ **/
+function posts_link_attributes() {
+    return 'class="page-link"';
+}
+add_filter('next_posts_link_attributes', 'posts_link_attributes');
+add_filter('previous_posts_link_attributes', 'posts_link_attributes');
