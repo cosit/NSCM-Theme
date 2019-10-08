@@ -379,6 +379,8 @@ if( !class_exists( __CLASS__ ) ) {
 
                                             $interests = html_entity_decode( !empty( $row[ 'interests' ] ) ? $row[ 'interests' ] : $row[ 'prog_interests' ], ENT_QUOTES, "utf-8" );
 
+                                            $interests_out = self::_interests_short( $interests );
+                                            /*
                                             if( stripos( $interests, "<ul>" ) !== FALSE ) {
 
                                                 $interest_arr = array();
@@ -409,23 +411,24 @@ if( !class_exists( __CLASS__ ) ) {
                                                 $interests = str_replace( "<br />", "", $interests );
                                                 $interests = str_replace( "<br>", "", $interests );
 
-                                                if( preg_match( ";", $interests ) )
+                                                if( preg_match( "/;/", $interests ) )
                                                     $interest_arr = explode( "; ", $interests );
-                                                else if ( preg_match( ",", $interests ) )
+                                                else if ( preg_match( "/,/", $interests ) )
                                                     $interest_arr = explode( ", ", $interests );
-                                                else if ( preg_match( ".", $interests) && !preg_match( "/.$/", $interests ) )
+                                                else if ( preg_match( "/./", $interests) && !preg_match( "/.$/", $interests ) )
                                                     $interest_arr = explode( ". ", $interests );
                                             }
 
                                             $interests_out = "";
                                             foreach( $interest_arr as $idx => $interest ) {
-                                                if( strlen( $interests_out ) < 45 && $idx + 1 != count( $interest_arr ) )
+                                                if( strlen( $interests_out ) < 25 && $idx + 1 != count( $interest_arr ) )
                                                     $interests_out .= $interest . ", ";
                                                 else if ( $idx + 1 == count( $interest_arr ) )
-                                                    $interests_out .= ".";
+                                                    $interests_out .= $interest . ".";
                                                 else
                                                     $interests_out .= "&hellip;";
                                             }
+                                            */
                                             ?>
                                             <span class="fs-interest"><em>Interests:</em> <?= $interests_out ?></span><br />
                                             <?php
@@ -1046,6 +1049,86 @@ if( !class_exists( __CLASS__ ) ) {
             if( !empty( $sql_filter ) ) $sql_filter .= ")";
 
             return $sql_filter;
+        }
+
+
+        private static function _interests_short( string $interests ) {
+
+            if( stripos( $interests, "<ul>" ) !== FALSE ) {
+
+                $interest_arr = array();
+                
+                libxml_use_internal_errors( TRUE );
+                try {
+                    $xml = new SimpleXMLElement( "<body>$interests</body>");
+
+                } catch( Exception $e ) {
+                    $xml = NULL;
+                }
+
+                if( $xml != NULL ) {
+                    $xml_parse = $xml->xpath( 'ul/li' );
+                    foreach( $xml_parse as $interest ) {
+                        array_push( $interest_arr, trim( $interest ) );
+                    }
+
+                } else {
+                    $interests = strip_tags( $interests, "<li>" );
+                    $interest_arr = explode( "<li>", $interests );
+                }
+
+            } else {
+                $interests = strip_tags( $interests );
+                $interests = str_ireplace( "<p>", "", $interests );
+                $interests = str_ireplace( "</p>", "", $interests );
+                $interests = str_replace( "<br />", "", $interests );
+                $interests = str_replace( "<br>", "", $interests );
+
+                if( strpos( $interests, ";" ) !== FALSE )
+                    $interest_arr = explode( ";", $interests );
+                else if( strpos( $interests, "," ) !== FALSE )
+                    $interest_arr = explode( ",", $interests );
+                else if( strpos( $interests, "." ) !== FALSE && ( substr_count( $interests, "." ) > 1 || strpos( $interests, ".", -1 ) === FALSE ) )
+                    $interest_arr = explode( ".", $interests );
+                
+                /*
+                if( preg_match( "/;/", $interests ) )
+                    $interest_arr = explode( "; ", $interests );
+                else if ( preg_match( "/,/", $interests ) )
+                    $interest_arr = explode( ", ", $interests );
+                else if ( preg_match_all( "/./", $interests) !== FALSE && !( preg_match_all( "/./", $interests ) == 1 && preg_match( "/.$/", $interests ) ) ) {
+                    $interest_arr = explode( ". ", $interests );
+                */
+            }
+
+            $interests_out = "";
+            foreach( $interest_arr as $idx => $interest ) {
+
+                $interests_out .= trim( $interest );
+
+                if( $idx + 1 == count( $interest_arr ) ) {
+                    $interests_out .= ".";
+                    break;
+                }
+
+                if( strlen( $interests_out ) >= 30 /*|| strlen( $interests_out ) + strlen( $interest ) >= 45 */ ) { 
+                    $interests_out .= "&hellip;";
+                    break;
+
+                } else {
+                    $interests_out .= ", ";
+                }
+                /*
+                if( strlen( $interests_out ) < 25 && $idx + 1 != count( $interest_arr ) )
+                    $interests_out .= $interest . ", ";
+                else if ( $idx + 1 == count( $interest_arr ) )
+                    $interests_out .= $interest . ".";
+                else
+                    $interests_out .= "&hellip;";
+                */
+            }
+
+            return $interests_out;
         }
     }
 }
