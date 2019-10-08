@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-//require_once 'query-ref.php';
+require_once 'query-ref.php';
 
 use FacultyStaffQueryRef as QEnum;
 
@@ -38,7 +38,7 @@ if( !class_exists( 'FacultyStaffQueryLib' ) ) {
             $this->dept = $dept;
 
             // This is the base string for all Department-level requests.
-            $this->query_base = "SELECT u.id, u.lname, u.phone, u.photo_path, u.photo_extra, u.email, u.location, u.room_id, u.office, u.interests, u.activities, u.awards, u.research, u.has_cv, u.homepage, u.biography, REPLACE( CONCAT_WS( ' ', u.fname, u.mname, u.lname), ' ', ' ') AS fullname, t.description AS title, d_s.description, t.title_group, u_d.prog_title_dept AS title_dept, u_d.prog_title_dept_short AS title_dept_short FROM cah.users AS u LEFT JOIN cah.users_departments AS u_d ON u.id = u_d.user_id LEFT JOIN cah.titles AS t ON u_d.title_id = t.id LEFT JOIN cah.departments AS d ON u_d.department_id = d.id LEFT JOIN cah.departments_sub AS d_s ON u_d.subdepartment_id = d_s.id WHERE u_d.department_id = 37 AND u.active = 1 AND u.show_web = 1 AND u_d.affiliation = 'active'";
+            $this->query_base = "SELECT u.id AS `id`, u.lname, u.phone, u.photo_path, u.photo_extra, u.email, u.location, u.room_id, u.office, u.interests, u.activities, u.awards, u.research, u.has_cv, u.homepage, u.biography, CONCAT_WS( ' ', u.fname, u.mname, u.lname) AS fullname, t.description AS title, d_s.description, t.title_group, u_d.prog_title_dept AS title_dept, u_d.prog_title_dept_short AS title_dept_short FROM cah.users AS u LEFT JOIN cah.users_departments AS u_d ON u.id = u_d.user_id LEFT JOIN cah.titles AS t ON u_d.title_id = t.id LEFT JOIN cah.departments AS d ON u_d.department_id = d.id LEFT JOIN cah.departments_sub AS d_s ON u_d.subdepartment_id = d_s.id WHERE u_d.department_id = $dept AND u.active = 1 AND u.show_web = 1 AND u_d.affiliation = 'active'";
         }
         
 

@@ -1,4 +1,12 @@
 <?php
+/**
+ * A static helper class both to register all our scripts and things with WordPress and to
+ * handle the heavy lifting for our back-end functionality. Many of the core functions are
+ * updated/streamlined versions of code by Mannong Pang.
+ * 
+ * @author Mike W. Leavitt
+ * @version 2.0.0
+ */
 
 require_once 'dbconfig.php';
 require_once 'query-lib.php';
@@ -18,6 +26,15 @@ if( !class_exists( __CLASS__ ) ) {
         private function __construct() { /* Prevent instantiation */ }
 
 
+        /**
+         * Register our action hooks with Wordpress. All the methods are found in this class.
+         * (Called with add_action() from functions.php).
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @return void
+         */
         public static function action_hooks() : void {
             add_action( 'wp_enqueue_scripts', array( __CLASS__, 'load_scripts' ), 9, 0 );
             add_action( 'wp_default_scripts', array( __CLASS__, 'jquery_footer' ), 5, 1 );
@@ -26,10 +43,25 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
+        /**
+         * Load our JavaScript and pass the values we need with wp_localize_script().
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @return void
+         */
         public static function load_scripts() : void {
 
+            // Don't want to load this if we're in the Dashboard.
+            if( is_admin() ) return;
+
+            // Load our JS. Come on, you know how this works by now... :P
             wp_enqueue_script( 'faculty-staff-script', get_stylesheet_directory_uri() . '/faculty-staff-includes/faculty-staff.js', array( 'jquery', 'script' ), '1.0.0', TRUE );
 
+            // Stuff to pass to our page's JavaScript. The "security" field is a nonce
+            // we're creating to make sure it's still the user making requests on the
+            // back-end.
             wp_localize_script( 'faculty-staff-script', 'pageVars', array(
                     'url' => admin_url( 'admin-ajax.php' ),
                     'dept' => DEPT,
@@ -39,75 +71,103 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
+        /**
+         * Make WordPress load jQuery in the footer, if at all possible, to speed up load times.
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param object $wp_scripts | The script handler object thingy for WordPress.
+         * 
+         * @return void
+         */
         public static function jquery_footer( $wp_scripts ) : void {
 
+            // We don't want to load this if we're in the Dashboard.
             if( is_admin() ) return;
 
+            // Modifying the jQuery entries in the $wp_scripts object to load in the footer.
             $wp_scripts->add_data( 'jquery', 'group', 1 );
             $wp_scripts->add_data( 'jquery-core', 'group', 1 );
             $wp_scripts->add_data( 'jquery-migrate', 'group', 1 );
         }
 
 
+        /**
+         * Our AJAX back-end handler, called by admin-ajax.php for both wp_ajax_{action} and 
+         * wp_ajax_nopriv_{action}
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @return void;
+         */
         public static function print_faculty() {
 
+            // Check the nonce. Calls die() if it fails.
             check_ajax_referer( 'ajax-nonce', 'security' );
 
+            // Set the subdepartment ID and/or user ID, if applicable.
+            // Probably won't ever have both set at once, but preferences subdepartment.
             $sub_dept = isset( $_POST[ 'sub_dept'] ) ? $_POST[ 'sub_dept' ] : 0;
             $user_id = isset( $_POST[ 'id' ] ) ? $_POST[ 'id' ] : 0;
 
+            // Gets the relevant staff query result.
             $result = self::get_NSCM_staff( DEPT, $sub_dept, $user_id );
 
-            if( $sub_dept != 0 )
+            if( $result === FALSE ) echo "PROBLEM WITH VALIDATION";
+
+            // If we've defined a subdepartment, we'll go get that.
+            if( intval( $sub_dept ) !== 0 )
                 echo self::print_staff( $result, TRUE );
 
-            else if( $user_id != 0 )
+            // Or, if we've defined a user, we'll get them instead.
+            else if( intval( $user_id ) !== 0 )
                 echo self::staff_detail( $result );
 
+            // Barring that, we'll get e'er'body.
             else
                 echo self::print_staff( $result );
 
+            // Important to remind the script to die at the end, for security's sake.
             die();
-            /*
-            if( isset( $_POST[ 'sub-dept' ] ) ) {
-
-                $sub_dept = self::parse_int( $_POST[ 'sub-dept' ] );
-                $result = self::get_NSCM_staff( DEPT, $sub_dept );
-
-            } else if( isset( $_GET[ 'id' ] ) || isset( $_POST[ 'id' ] ) ) {
-
-                $id = self::parse_int( isset( $_GET[ 'id' ] ) ? $_GET[ 'id' ] : $_POST[ 'id' ] );
-                $result = self::get_NSCM_staff( DEPT, 0, $id );
-
-            } else {
-                $result = self::get_NSCM_staff( DEPT );
-            }
-
-            if( $sub_dept == 0 && $id == 0 )
-                echo self::print_staff( $result );
-            else if( $sub_dept != 0 )
-                echo self::print_staff( $result, TRUE );
-            else if( $id != 0 )
-                echo self::staff_detail( $result );
-
-            die();
-            */
         }
 
 
-        public static function db_get() : object {
+        /**
+         * Connect to the database, or return the active connection, if one exists.
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @return mysqli_connection $db_connection | The static class member connection object.
+         */
+        public static function db_get() {
+            // Global database variables, set in dbconfig.php
             global $db_user, $db_pass, $db, $db_server;
 
+            // If we've already got a connection open, just return that.
             if( self::$db_connection ) return self::$db_connection;
 
+            // Otherwise, create one, and kill the script if it doesn't work.
             self::$db_connection = mysqli_connect( $db_server, $db_user, $db_pass ) or exit( 'Could not connect to server.' );
-            mysqli_set_charset( self::$db_connection, 'utf8' );
+            mysqli_set_charset( self::$db_connection, 'utf8' ); // Set charset to UTF-8.
+            // Select the appropriate database.
             mysqli_select_db( self::$db_connection, $db ) or exit( 'Could not select database.' );
 
+            // Return the new connection.
             return self::$db_connection;
         }
 
 
+        /**
+         * Closes the database connection, when we're done.
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @return void
+         */
         public static function db_close() : void {
             global $db_connection;
             if( $db_connection !== FALSE ) mysqli_close( $db_connection );
@@ -115,7 +175,20 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
-        public static function get_fsq_lib( $dept = DEPT ) {
+        /**
+         * Instantiates the FacultyStaffQueryLib helper object, for concocting the SQL strings
+         * we'll need.
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param int|string $dept | The department ID that we'll be getting. Defaults to the value
+         *                              of the DEPT constant, if defined (usually in the
+         *                              theme's functions.php)
+         * 
+         * @return FacultyStaffQueryLib $query_lib | The FacultyStaffQueryLib object instance.
+         */
+        public static function get_fsq_lib( $dept = DEPT ) : FSQLib {
 
             if( is_null( self::$query_lib) || !is_a( self::$query_lib, 'FacultyStaffQueryLib' ) )
                 self::$query_lib = new FSQLib( $dept );
@@ -124,7 +197,17 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
-        private static function _run_query( string $sql ) {
+        /**
+         * Runs a given query, then validates and returns the results.
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param string $sql | The SQL query we'll be running.
+         * 
+         * @return mysqli_result|bool $result|FALSE | Return the query result, or FALSE on error.
+         */
+        private static function _run_query( string $sql )  {
 
             $result = mysqli_query( self::db_get(), $sql );
 
@@ -134,6 +217,20 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
+        /**
+         * Makes sure there was a result, and dies with a message to the user if there wasn't.
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param mysqli_result $result | The result of an SQL query.
+         * @param string        $sql    | The SQL query string to print if $debug is TRUE.
+         * @param bool          $debug  | Whether or not to display verbose query messaging for debug
+         *                                  purposes.
+         * 
+         * @return bool (anon) | Whether the SQL validates or not. Since the process dies on failure,
+         *                          only ever actually returns TRUE.
+         */
         private static function _validate( $result, string $sql, bool $debug = FALSE ) : bool {
             $msg = "";
 
@@ -153,6 +250,17 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
+        /**
+         * A function to get the categories for the Filter menu, called from page-faculty-staff.php
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param int|string $dept | The department we're looking for. Defaults to the value of the
+         *                              DEPT constant (usually defined in the theme's functions.php).
+         * 
+         * @return mysqli_result|bool $result | The result of the query, or FALSE if no result.
+         */
         public static function get_menu_categories( int $dept = DEPT) {
             self::get_fsq_lib( $dept );
 
@@ -164,23 +272,36 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
-        public static function get_NSCM_staff( $dept = 37, int $sub_dept = 0, int $user_id = 0 ) {
+        /**
+         * The main "switchboard" of the class. Determines which query string to retrieve from the
+         * FacultyStaffQueryLib object and run.
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param int|string $dept      | Department number. Defaults to value of DEPT constant.
+         * @param int|string $sub_dept  | The subdepartment, in case we're trying to be more specific.
+         * @param int|string $user_id   | The user ID, in case we're looking for a specific staff member.
+         * 
+         * @return mysqli_result|bool $result | The results of the query, or FALSE if no result.
+         */
+        public static function get_NSCM_staff( $dept = DEPT, $sub_dept = 0, $user_id = 0 ) {
 
             // Just in case it hasn't been created yet.
             self::get_fsq_lib( $dept );
 
             $sql = "";
 
-            if( $sub_dept === 1 ) 
+            if( intval( $sub_dept ) === 1 ) 
                 $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_ADMIN );
 
-            else if( $sub_dept === 2 )
+            else if( intval( $sub_dept ) === 2 )
                 $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_STAFF );
 
-            else if( $sub_dept !== 0 )
+            else if( intval( $sub_dept ) !== 0 )
                 $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_SUB_GENERAL, $sub_dept );
 
-            else if( $user_id !== 0 )
+            else if( intval( $user_id ) !== 0 )
                 $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_USER, $user_id );
 
             else
@@ -188,45 +309,24 @@ if( !class_exists( __CLASS__ ) ) {
 
             if( $result = self::_run_query( $sql ) ) return $result;
             else return FALSE;
-
-            /*
-            // GET ALL THE THINGS
-            $sql = "SELECT `u`.`lname`, `u`.`id`, `u`.`phone`, `u`.`photo_path`, `u`.`photo_extra`, `u`.`email`, `u`.`location`, `u`.`room_id`, `u`.`office`, `u`.`interests`, `u`.`activities`, `u`.`awards`, `u`.`duties`, `u`.`research`, `u`.`has_cv`, `u`.`homepage`, `u`.`biography`, REPLACE( CONCAT_WS( ' ', `u`.`fname`, `u`.`mname`, `u`.`lname`), ' ', ' ') AS fullname, `t`.`description` AS title, `d_s`.`description`, `t`.`title_group`, `u_d`.`prog_title_dept` AS title_dept, `u_d`.`prog_title_dept_short` AS title_dept_short FROM `users` AS `u`, `departments` AS `d`, `users_departments` AS `u_d` LEFT JOIN `departments_sub` AS `d_s` ON `u_d`.`subdepartment_id` = `d_s`.`id` WHERE `u_d`.`department_id` = $dept AND `u`.`active` = 1 AND `u`.`show_web` = 1 AND `u`.`id` = `u_d`.`user_id` AND `t`.`id` = `u_d`.`title_id` AND `d`.`id` = `u_d`.`department_id`";
-
-
-            if( $sub_dept === 1 ) // Administration
-                $sql .= " AND `t`.`title_group` IN(' Administrative Faculty' )";
-
-            else if( $sub_dept === 2 ) // Advising Staff
-                $sql .= " AND `u_d`.`title_id` IN( 67, 84, 121, 85, 53 )";
-            
-            else if( $sub_dept !== 0 ) // Everyone else
-                $sql .= " AND `u_d`.`subdepartment_id` = $sub_dept";
-            
-            // Check to see if it's an individual
-            if( $user_id !== 0 )
-                $sql .= " AND `u`.`id` = $user_id LIMIT 1";
-            
-            else
-                $sql .= " ORDER BY `u`.`lname`";
-
-            // If we're in the Admin section, put the directors first
-            if( $sub_dept === 1 )
-                $sql = "SELECT * FROM ( $sql ) AS NSCM_Admin ORDER BY (CASE WHEN title = 'Director' THEN 0 WHEN title != 'Director' THEN 1 END)";
-            
-            // Execute the query.
-            $result = mysqli_query( self::db_get(), $sql );
-            if( self::_validate( $result, $sql ) )
-                return $result;
-            else
-                return FALSE;
-            */
         }
 
 
+        /**
+         * Prints a list of staff members--either the entire department or a single subdepartment.
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param mysqli_result $result | The results from get_NSCM_staff() that we'll be sifting through.
+         * @param bool          $format | Whether or not to show the staff photo. Defaults to FALSE.
+         * 
+         * @return string (anon) | The buffered HTML output of the list, to be put on the page.
+         */
         public static function print_staff( $result, bool $format = FALSE ) : string {
 
-            global $post;
+            //global $post;
+            if( $result->num_rows == 0 ) return "NO DATA FOUND";
 
             ob_start();
             ?>
@@ -358,6 +458,16 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
+        /**
+         * Shows a single staff member's entry with more details, in case the user clicks on one.
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param mysqli_result $result | The result of the query from get_NSCM_staff().
+         * 
+         * @return string (anon) | The buffered HTML output of the entry, to be put on the page.
+         */
         public static function staff_detail( $result ) : string {
 
             $row = mysqli_fetch_assoc( $result );
@@ -367,7 +477,7 @@ if( !class_exists( __CLASS__ ) ) {
             <div class="row flex-column">
                     <div class="media">
                         <?= self::_get_staff_img( $row[ 'fullname' ],
-                            (!empty( $row[ 'photo_path'] ) ? $row[ 'photo_path' ] : "446.jpg" ),
+                            (!empty( $row[ 'photo_path'] ) ? $row[ 'photo_path' ] : "profilephoto.jpg" ),
                             (!empty( $row[ 'photo_extra' ] ) ? $row[ 'photo_extra' ] : "" ),
                             2
                         ); ?>
@@ -511,6 +621,17 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
+        /**
+         * Returns and integer. Probably deprectaed, actually--I don't think any of the things use it
+         * anymore...
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param int|string $value | The value to be integerized.
+         * 
+         * @return int $value | The same value, only cast to an integer.
+         */
         public static function parse_int( $value ) : int {
 
             if( !is_numeric( $value ) ) return 0;
@@ -518,7 +639,22 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
-        private static function _get_staff_img( string $fullname, string $filename = "profilephoto.jpg", string $extra = "", int $size = 5 ) : string {
+        /**
+         * Gets the appropriate staff image, formatted as HTML.
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param string $fullname | The staff member's name.
+         * @param string $filename | The staff member's profile photo, from their photo_path entry.
+         *                              Defaults to "profilephoto.jpg," an empty silhouette.
+         * @param string $extra    | The value of the staff member's photo_extra field, if any. Defaults
+         *                              to an empty string.
+         * @param int    $size     | The size code for the image. Defaults to 5.
+         * 
+         * @return string (anon) | Buffered HTML string containing the approprite <img> tag.
+         */
+        private static function _get_staff_img( $fullname, string $filename = "profilephoto.jpg", string $extra = "", int $size = 5 ) : string {
 
             $resize_url = "https://cah.ucf.edu/common/resize.php";
             $classes = array( 'img-circle', 'mr-3' );
@@ -534,6 +670,18 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
+        /**
+         * Formats a phone number, depending on its length. We're assuming a US number, for the sake
+         * of expediency and convenience.
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param string $phone | The phone number to parse.
+         * 
+         * @return string $phone | The parsed and rearranged phone number, or the original if it doesn't
+         *                          meet standard US length requirements.
+         */
         private static function _format_phone_us( string $phone ) {
 
             if( !isset( $phone ) ) return "";
@@ -557,6 +705,16 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
+        /**
+         * Retrieves information about the staff member's office location. Called by staff_detail().
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param int|string $room_id | The id number of the room in the `rooms` table.
+         * 
+         * @return array $row | We should only have one result, so we return the row as an array.
+         */
         private static function _office_location( $room_id ) {
 
             $sql = self::$query_lib->get_query_str( FSQEnum::USER_OFFICE, $room_id );
@@ -567,54 +725,67 @@ if( !class_exists( __CLASS__ ) ) {
 
                 return $row;
             }
-            /*
-            $sql = "SELECT `room_number`, `buildings`.`short_description`, `building_numbers` FROM `rooms` LEFT JOIN `buildings` ON `building_id` = `buildings`.`id` WHERE `rooms`.`id` = $room_id";
-
-            $result = mysqli_query( self::db_get(), $sql );
-            self::_validate( $result, $sql );
-            $row = mysqli_fetch_assoc( $result );
-            mysqli_free_result( $result );
-
-            return $row;
-            */
         }
 
 
+        /**
+         * Get the staff member's education history, if listed. Called by staff_detail().
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param int|string $user_id | The staff member's ID in the `users` table.
+         * 
+         * @return mysqli_result|bool $result | Returns the results of the query, or FALSE if no result.
+         */
         private static function _get_education( $user_id ) {
 
             $sql = self::$query_lib->get_query_str( FSQEnum::USER_EDU, $user_id );
 
             if( $result = self::_run_query( $sql ) ) return $result;
             else return FALSE;
-
-            /*
-            $sql = "SELECT * FROM `education` LEFT JOIN `degrees` ON `education`.`degrees_id` = `degrees`.`id` WHERE `user_id` = $user_id ORDER BY `year` DESC";
-
-            $result = mysqli_query( self::db_get(), $sql );
-
-            if( self::_validate( $result, $sql ) ) return $result;
-            else return FALSE;
-            */
         }
 
 
+        /**
+         * Retrieves the staff member's listed publications, if any. Called by staff_detail().
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param int|string $user_id  | The staff member's ID in the `users` table.
+         * @param bool       $approved | Whether or not the publication is approved. Defaults to TRUE.
+         * 
+         * @return mysqli_result|bool $result | Returns the results of the query, or FALSE if no result.
+         */
         private static function _get_publications( $user_id, bool $approved = TRUE ) {
 
             $sql = self::$query_lib->get_query_str( FSQEnum::USER_PUB, $user_id, $approved );
 
             if( $result = self::_run_query( $sql ) ) return $result;
             else return FALSE;
-
-            /*
-            $sql = "SELECT `publications`.`id`, `photo_path`, `forthcoming`, DATE_FORMAT( `publish_date`, '%M %Y' ) AS pubdate, `citation`, `plural_description` AS pubtype FROM `publications` LEFT JOIN `publications_categories` ON `publications`.`publication_id` = `publications_categories`.`id` WHERE `user_id` = $user_id AND `approved` = $approved ORDER BY `level`, `pubtype`, `publish_date`, `desc`, `citation`";
-
-            $result = mysqli_query( self::db_get(), $sql );
-
-            if( self::_validate( $result, $sql ) ) return $result;
-            else return FALSE;
-            */
         }
 
+
+        /**
+         * Retrieves the list of courses for the upcoming academic year. Called by staff_detail().
+         * A lot of these extra parameters aren't used in the current iteration of this script,
+         * but they might come in handy later on, for other purposes.
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param int|string $user_id                 | The staff member's ID in the `users` table.
+         * @param string     $term                    | The specific term, if applicable. Defaults to
+         *                                                  empty.
+         * @param string     $career                  | The specific career (Undergraduate or Graduate).
+         *                                                  Defaults to empty.
+         * @param string     $catalog_ref_filter_any  | A filter for the course results.
+         * @param string     $catalog_ref_filter_none | Another filter for the results, but negative.
+         * @param string     $prefix_filter_any       | Another filter, for specific course prefixes.
+         * 
+         * @return string (anon) | Buffered HTML containing the tabbed course list, sorted by semester.
+         */
         private static function _get_course_list( $user_id = 0, $term = "", $career = "", $catalog_ref_filter_any = "", $catalog_ref_filter_none = "", $prefix_filter_any = "" ) {
 
             $terms = array();
@@ -790,6 +961,14 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
+        /**
+         * Determines the proper semester to start displaying. Called from _get_course_list().
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @return string $term | The first term to show, with semester and four-digit year.
+         */
         private static function _get_semester() {
 
             $now = getdate();
@@ -824,6 +1003,20 @@ if( !class_exists( __CLASS__ ) ) {
         }
 
 
+        /**
+         * Handles the modifications to the SQL statements called for by the given filter(s). Called
+         * from _get_course_list().
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param string|array $catalog_ref | The filter(s) to use.
+         * @param bool $in | Whether this filter will explicitly include or exclude things. Defaults
+         *                      to TRUE.
+         * @param bool $prefix_only | Wether to filter only the course prefixes. Defaults to FALSE.
+         * 
+         * @return string $sql_filter | The additional SQL, to further refine the course query.
+         */
         private static function _parse_filters( $catalog_ref, bool $in = TRUE, bool $prefix_only = FALSE ) {
             
             $sql_filter = "";

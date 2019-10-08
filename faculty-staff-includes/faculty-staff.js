@@ -10,7 +10,8 @@
     
     const getStaff = (text = 'A&ndash;Z List', sub = 0, uId = 0) => {
 
-        console.log(uId);
+        console.log("User ID: " + uId);
+        console.log("Subdepartment ID: " + sub);
 
         const postData = {
             action: 'print_faculty_staff',
@@ -35,7 +36,7 @@
                 }
             }
         }).fail(result => { console.log(result); });
-    }
+    };
 
     const addHandlers = () => {
 
@@ -47,7 +48,7 @@
             
             getStaff('', 0, userId );
         });
-    }
+    };
 
     $(document).ready( $ => {
 
@@ -58,7 +59,7 @@
         getStaff();
 
         $('.dropdown-menu a').click( function(e) {
-            e.stopPropagation();
+            e.preventDefault();
             $('.dropdown-menu a').removeClass('active');
             $(this).addClass('active');
             const textClicked = $(this).text();
