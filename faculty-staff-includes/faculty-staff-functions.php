@@ -56,6 +56,7 @@ if( !class_exists( __CLASS__ ) ) {
             // Don't want to load this if we're in the Dashboard.
             if( is_admin() ) return;
 
+            // Load our CSS
             wp_enqueue_style( 'faculty-staff-style', get_stylesheet_directory_uri() .'/faculty-staff-includes/static/css/faculty-staff.min.css' );
 
             // Load our JS. Come on, you know how this works by now... :P
