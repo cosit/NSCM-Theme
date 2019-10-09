@@ -384,7 +384,7 @@ if( !class_exists( __CLASS__ ) ) {
                             ?>
                                         <div class="fs-list">
                                             <small>
-                                                <span class="staff-title">
+                                                <p class="staff-title">
                                         
                                         <?php 
                                         // $title = isset( $row[ 'title_dept_short' ] ) ? $row[ 'title_dept_short' ] : $row[ 'title' ];
@@ -395,11 +395,13 @@ if( !class_exists( __CLASS__ ) ) {
                                                     <span class="fa fa-star mr-1 text-primary" aria-hidden="true"></span>
                                         <?php endif; ?>
                                                     <em><?= $title ?></em>
-                                                </span><br />
+                                                </p>
                                                 <?= $row[ 'email' ] ?><br />
 
-                                        <?php // Print research interests, if available.
+                                        <?php 
+                                        /* Can add Interests field, if desired...
 
+                                        // Print research interests, if available.
                                         if( !empty( $row[ 'interests' ] ) || !empty( $row[ 'prog_interests' ] ) ) {
 
                                             $interests = html_entity_decode( !empty( $row[ 'interests' ] ) ? $row[ 'interests' ] : $row[ 'prog_interests' ], ENT_QUOTES, "utf-8" );
@@ -407,9 +409,10 @@ if( !class_exists( __CLASS__ ) ) {
                                             // Processes, normalizes, and or abbreviates the interests.
                                             $interests_out = self::_interests_short( $interests );
                                             ?>
-                                                <span class="fs-interest"><em>Interests:</em> <?= $interests_out ?></span><br />
+                                                <p class="fs-interest"><em>Interests:</em> <?= $interests_out ?></p>
                                             <?php
                                         }
+                                        */
                                         ?>
                                             </small>
                                         </div>
