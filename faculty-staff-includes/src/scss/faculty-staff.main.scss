@@ -1,0 +1,77 @@
+#cah-faculty-staff {
+
+    h3 {
+        width: 100%;
+    }
+
+    .img-circle {
+        height: 100px;
+        width: 100px;
+    }
+
+    .img-circle-detail {
+        height: 150px;
+        width: 150px;
+    }
+
+    .img-circle,
+    .img-circle-detail {
+        object-fit: cover;
+        object-position: 0 0;
+        border-radius: 50%;
+    }
+}
+
+.cah-staff-list {
+
+    a, a:visited {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .staff-list {
+        padding: 10px;
+    
+        &:hover {
+            background-color: #EEEEEE;
+        }
+
+        .staff-title {
+            font-size: 1.1em;
+        }
+    }
+}
+
+.staff-detail {
+    font-size: 90% !important;
+}
+
+#dept-menu-div {
+    nav {
+
+        &:hover, .active {
+            cursor: grab !important;
+        }
+
+        .nav-item {
+            padding: 0;
+
+            .nav-link {
+                padding: .4em .5em;
+                justify-content: left;
+
+                p {
+                    margin: 0;
+                    padding: 0;
+                    width: auto;
+                    text-align: left;
+                }
+            }
+        }
+    }
+}
+
+.fs-list {
+    font-size: 90%;
+    line-height: 20px;
+}

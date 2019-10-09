@@ -56,15 +56,18 @@ if( !class_exists( __CLASS__ ) ) {
             // Don't want to load this if we're in the Dashboard.
             if( is_admin() ) return;
 
+            wp_enqueue_style( 'faculty-staff-style', get_stylesheet_directory_uri() .'/faculty-staff-includes/static/css/faculty-staff.min.css' );
+
             // Load our JS. Come on, you know how this works by now... :P
-            wp_enqueue_script( 'faculty-staff-script', get_stylesheet_directory_uri() . '/faculty-staff-includes/faculty-staff.js', array( 'jquery', 'script' ), '1.0.0', TRUE );
+            wp_enqueue_script( 'faculty-staff-script', get_stylesheet_directory_uri() . '/faculty-staff-includes/static/js/faculty-staff.min.js', array( 'jquery', 'script' ), '1.0.0', TRUE );
 
             // Stuff to pass to our page's JavaScript. The "security" field is a nonce
             // we're creating to make sure it's still the user making requests on the
             // back-end.
             wp_localize_script( 'faculty-staff-script', 'pageVars', array(
-                    'url' => admin_url( 'admin-ajax.php' ),
-                    'dept' => DEPT,
+                    'url' => admin_url( 'admin-ajax.php' ), // The URL we'll use in $.ajax()
+                    'dept' => DEPT, // I'm not sure we actually use this one.
+                    // A nonce for an added layer of back-end security.
                     'security' => wp_create_nonce( 'ajax-nonce' )
                 )
             );
@@ -72,7 +75,9 @@ if( !class_exists( __CLASS__ ) ) {
 
 
         /**
-         * Make WordPress load jQuery in the footer, if at all possible, to speed up load times.
+         * Make WordPress load JQuery in the footer, if at all possible, to speed up load times.
+         * If another script's dependenccy requires JQuery to be loaded in the header, this won't
+         * really have any effect.
          * 
          * @author Mike W. Leavitt
          * @since 2.0.0
@@ -94,8 +99,9 @@ if( !class_exists( __CLASS__ ) ) {
 
 
         /**
-         * Our AJAX back-end handler, called by admin-ajax.php for both wp_ajax_{action} and 
-         * wp_ajax_nopriv_{action}
+         * Our AJAX back-end handler, called by admin-ajax.php for both wp_ajax_print_faculty_staff and 
+         * wp_ajax_nopriv_print_faculty_staff (since we'll want the same behavior regardless of
+         * whether the user is logged in).
          * 
          * @author Mike W. Leavitt
          * @since 2.0.0
@@ -113,9 +119,7 @@ if( !class_exists( __CLASS__ ) ) {
             $user_id = isset( $_POST[ 'id' ] ) ? $_POST[ 'id' ] : 0;
 
             // Gets the relevant staff query result.
-            $result = self::get_NSCM_staff( DEPT, $sub_dept, $user_id );
-
-            if( $result === FALSE ) echo "PROBLEM WITH VALIDATION";
+            $result = self::get_NSCM_staff( DEPT, intval( $sub_dept ), intval( $user_id ) );
 
             // If we've defined a subdepartment, we'll go get that.
             if( intval( $sub_dept ) !== 0 )
@@ -170,6 +174,8 @@ if( !class_exists( __CLASS__ ) ) {
          */
         public static function db_close() : void {
             global $db_connection;
+
+            // If there's a database connection, close it, and set the global to FALSE.
             if( $db_connection !== FALSE ) mysqli_close( $db_connection );
             $db_connection = FALSE;
         }
@@ -190,9 +196,11 @@ if( !class_exists( __CLASS__ ) ) {
          */
         public static function get_fsq_lib( $dept = DEPT ) : FSQLib {
 
+            // If we haven't instantiated this yet, go ahead and do it.
             if( is_null( self::$query_lib) || !is_a( self::$query_lib, 'FacultyStaffQueryLib' ) )
                 self::$query_lib = new FSQLib( $dept );
             
+            // If we have, return it. This saves us having to create and destroy it every time.
             return self::$query_lib;
         }
 
@@ -209,8 +217,10 @@ if( !class_exists( __CLASS__ ) ) {
          */
         private static function _run_query( string $sql )  {
 
+            // Do the thing.
             $result = mysqli_query( self::db_get(), $sql );
 
+            // Check to see if something went wrong, and return FALSE if it did.
             if( self::_validate( $result, $sql, TRUE ) ) return $result;
             else return FALSE;
 
@@ -234,6 +244,8 @@ if( !class_exists( __CLASS__ ) ) {
         private static function _validate( $result, string $sql, bool $debug = FALSE ) : bool {
             $msg = "";
 
+            // If there's a problem with the query, $result will evaluate to FALSE. If we
+            // call this with DEBUG on, then a problem will cause output to the screen.
             if( !$result ) {
                 
                 if( $debug ) {
@@ -246,7 +258,7 @@ if( !class_exists( __CLASS__ ) ) {
 
                 die( $msg );
 
-            } else return TRUE;
+            } else return TRUE; // If the variable exists, though, everything's fine.
         }
 
 
@@ -262,12 +274,14 @@ if( !class_exists( __CLASS__ ) ) {
          * @return mysqli_result|bool $result | The result of the query, or FALSE if no result.
          */
         public static function get_menu_categories( int $dept = DEPT) {
+            // Grab/create the SQL library object.
             self::get_fsq_lib( $dept );
 
+            // Use it to get the SQL
             $sql = self::$query_lib->get_query_str( FSQEnum::ACAD_CATS );
             
+            // Run the query for the menu categories.
             if( $result = self::_run_query( $sql ) ) return $result;
-
             else return FALSE;
         }
 
@@ -292,21 +306,27 @@ if( !class_exists( __CLASS__ ) ) {
 
             $sql = "";
 
-            if( intval( $sub_dept ) === 1 ) 
+            // 1 is for Administration
+            if( $sub_dept === 1 ) 
                 $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_ADMIN );
 
-            else if( intval( $sub_dept ) === 2 )
+            // 2 is for Advising
+            else if( $sub_dept === 2 )
                 $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_STAFF );
 
-            else if( intval( $sub_dept ) !== 0 )
+            // This catches any of the department-specific subdepartments
+            else if( $sub_dept !== 0 )
                 $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_SUB_GENERAL, $sub_dept );
 
-            else if( intval( $user_id ) !== 0 )
+            // This handles a request for a single staff member's info.
+            else if( $user_id !== 0 )
                 $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_USER, $user_id );
 
+            // This is the general query for e'er'body.
             else
                 $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_ALL );
 
+            // If we get a result, return it, or return FALSE.
             if( $result = self::_run_query( $sql ) ) return $result;
             else return FALSE;
         }
@@ -325,14 +345,12 @@ if( !class_exists( __CLASS__ ) ) {
          */
         public static function print_staff( $result, bool $format = FALSE ) : string {
 
-            //global $post;
-            if( $result->num_rows == 0 ) return "NO DATA FOUND";
-
-            ob_start();
+            ob_start(); // Starts an output buffer, so I can write clearer HTML.
             ?>
             <div class="row">
             <?php
             
+            // Iterate through all the entries.
             while( $row = mysqli_fetch_assoc( $result ) ) {
                 ?>
                 <div class="col-lg-6 col-md-12">
@@ -344,7 +362,7 @@ if( !class_exists( __CLASS__ ) ) {
                             if( $format ) :
                             ?>
                                 <div class="media">
-                                <?= self::_get_staff_img( 
+                                <?= self::_get_staff_img( //Get image
                                     $row[ 'fullname' ], 
                                     ( !empty( $row[ 'photo_path' ] )  ? $row[ 'photo_path' ]  : "446.jpg" ), 
                                     ( !empty( $row[ 'photo_extra' ] ) ? $row[ 'photo_extra' ] : "" ), 
@@ -358,20 +376,27 @@ if( !class_exists( __CLASS__ ) ) {
                                         <strong><?= $row[ 'fullname' ] ?></strong><br />
 
                             <?php
+                            
+                            $title = isset( $row['title_dept-short'] ) ? $row['title_dept_short'] : $row['title'];
+
                             // Back to non-A-Z List stuff.
                             if( $format ) :
                             ?>
                                         <div class="fs-list">
+                                            <small>
+                                                <span class="staff-title">
                                         
                                         <?php 
-                                        $title = isset( $row[ 'title_dept_short' ] ) ? $row[ 'title_dept_short' ] : $row[ 'title' ];
+                                        // $title = isset( $row[ 'title_dept_short' ] ) ? $row[ 'title_dept_short' ] : $row[ 'title' ];
                                         
+                                        // Putting Directors at the front. It's good to be the king.
                                         if( $title == 'Director' ) :
                                         ?>
-                                            <span class="fa fa-star mr-1 text-primary" aria-hidden="true"></span>
+                                                    <span class="fa fa-star mr-1 text-primary" aria-hidden="true"></span>
                                         <?php endif; ?>
-                                            <em><?= $title ?></em><br />
-                                            <?= $row[ 'email' ] ?><br />
+                                                    <em><?= $title ?></em>
+                                                </span><br />
+                                                <?= $row[ 'email' ] ?><br />
 
                                         <?php // Print research interests, if available.
 
@@ -379,66 +404,24 @@ if( !class_exists( __CLASS__ ) ) {
 
                                             $interests = html_entity_decode( !empty( $row[ 'interests' ] ) ? $row[ 'interests' ] : $row[ 'prog_interests' ], ENT_QUOTES, "utf-8" );
 
+                                            // Processes, normalizes, and or abbreviates the interests.
                                             $interests_out = self::_interests_short( $interests );
-                                            /*
-                                            if( stripos( $interests, "<ul>" ) !== FALSE ) {
-
-                                                $interest_arr = array();
-                                                
-                                                libxml_use_internal_errors( TRUE );
-                                                try {
-                                                    $xml = new SimpleXMLElement( "<body>$interests</body>");
-
-                                                } catch( Exception $e ) {
-                                                    $xml = NULL;
-                                                }
-
-                                                if( $xml != NULL ) {
-                                                    $xml_parse = $xml->xpath( 'ul/li' );
-                                                    foreach( $xml_parse as $interest ) {
-                                                        array_push( $interest_arr, trim( $interest ) );
-                                                    }
-
-                                                } else {
-                                                    $interests = strip_tags( $interests, "<li>" );
-                                                    $interest_arr = explode( "<li>", $interests );
-                                                }
-
-                                            } else {
-                                                $interests = strip_tags( $interests );
-                                                $interests = str_ireplace( "<p>", "", $interests );
-                                                $interests = str_ireplace( "</p>", "", $interests );
-                                                $interests = str_replace( "<br />", "", $interests );
-                                                $interests = str_replace( "<br>", "", $interests );
-
-                                                if( preg_match( "/;/", $interests ) )
-                                                    $interest_arr = explode( "; ", $interests );
-                                                else if ( preg_match( "/,/", $interests ) )
-                                                    $interest_arr = explode( ", ", $interests );
-                                                else if ( preg_match( "/./", $interests) && !preg_match( "/.$/", $interests ) )
-                                                    $interest_arr = explode( ". ", $interests );
-                                            }
-
-                                            $interests_out = "";
-                                            foreach( $interest_arr as $idx => $interest ) {
-                                                if( strlen( $interests_out ) < 25 && $idx + 1 != count( $interest_arr ) )
-                                                    $interests_out .= $interest . ", ";
-                                                else if ( $idx + 1 == count( $interest_arr ) )
-                                                    $interests_out .= $interest . ".";
-                                                else
-                                                    $interests_out .= "&hellip;";
-                                            }
-                                            */
                                             ?>
-                                            <span class="fs-interest"><em>Interests:</em> <?= $interests_out ?></span><br />
+                                                <span class="fs-interest"><em>Interests:</em> <?= $interests_out ?></span><br />
                                             <?php
                                         }
                                         ?>
+                                            </small>
                                         </div>
                                         
                             <?php else : ?>
-                                        <?= $row[ 'email' ] ?><br />
-                                        <?= isset( $row[ 'phone' ] ) ? self::_format_phone_us( $row[ 'phone' ] ) : "" ?>
+                                        <small>
+                                            <span class="staff-title">
+                                                <em><?= $title ?></em>
+                                            </span><br />
+                                            <?= $row[ 'email' ] ?><br />
+                                            <?= isset( $row[ 'phone' ] ) ? self::_format_phone_us( $row[ 'phone' ] ) : "" ?>
+                                        </small>
                             <?php endif; ?>
 
                             <?php if( $format ) : // Closing out the extra media <div> elements ?>
@@ -452,12 +435,15 @@ if( !class_exists( __CLASS__ ) ) {
                 </div> <?php // Close column ?>
             <?php
             }
+            // Free up the result memory.
+            mysqli_free_result( $result );
             ?>
             </div> <?php // Close row ?>
             <?php
 
-            self::db_close();
-            return ob_get_clean();
+            self::db_close(); // Close out the database connection, to save on memory.
+
+            return ob_get_clean(); // Return the buffered HTML
         }
 
 
@@ -473,22 +459,27 @@ if( !class_exists( __CLASS__ ) ) {
          */
         public static function staff_detail( $result ) : string {
 
+            // For an individual staff member, we should only have one result, and we don't really care about the rest.
             $row = mysqli_fetch_assoc( $result );
 
-            ob_start();
+            // We don't need the result anymore, just the row.
+            mysqli_free_result( $result );
+
+            ob_start(); // Start the output buffer.
             ?>
-            <div class="row flex-column">
+            <div class="staff-detail row flex-column">
                     <div class="media">
-                        <?= self::_get_staff_img( $row[ 'fullname' ],
+                        <?= self::_get_staff_img( // Get the faculty portrait.
+                            $row[ 'fullname' ],
                             (!empty( $row[ 'photo_path'] ) ? $row[ 'photo_path' ] : "profilephoto.jpg" ),
                             (!empty( $row[ 'photo_extra' ] ) ? $row[ 'photo_extra' ] : "" ),
                             2
                         ); ?>
                         <div class="media-body">
                             <h4><?= $row[ 'fullname' ] ?></h4>
-                            <span class="small"><em>
+                            <span><em>
                                 <?php 
-                                if( !empty( $row[ 'title_dept' ] ) )
+                                if( !empty( $row[ 'title_dept' ] ) ) // Display their title
                                     echo $row[ 'title_dept' ];
                                 else
                                     echo $row[ 'title' ];
@@ -503,8 +494,9 @@ if( !class_exists( __CLASS__ ) ) {
                             <?php
                             if( !empty($row[ 'room_id' ]) ) {
                                 $room_id = $row[ 'room_id' ];
-                                $loc = self::_office_location( $room_id );
+                                $loc = self::_office_location( $room_id ); // Get office number
                                 
+                                // Display office number, based on what came back from the query.
                                 if( !empty( $loc[ 'building_number' ] ) ) : ?>
                                     Campus Location: <a href="https://map.ucf.edu/locations/<?= $loc[ 'building_number' ] ?>" target="_blank">
                                 <?php endif; ?>
@@ -522,7 +514,7 @@ if( !class_exists( __CLASS__ ) ) {
                                 <?php
                             }
 
-                            if( !empty( $row[ 'has_cv' ] ) ) : ?>
+                            if( !empty( $row[ 'has_cv' ] ) ) : // Display resume/CV, if available ?>
                                 
                                 <a href="https://cah.ucf.edu/common/files/cv/<?= $row[ 'id' ] ?>.pdf">View CV</a><br />
 
@@ -534,13 +526,13 @@ if( !class_exists( __CLASS__ ) ) {
                         </div>
                     </div>
 
-                <?php if( !empty( $row[ 'biography' ] ) ) : ?>
+                <?php if( !empty( $row[ 'biography' ] ) ) : // Display Bio ?>
                     <div class="pt-2">
                         <?= $row[ 'biography' ] ?>
                     </div>
                 <?php endif;
 
-                $education = self::_get_education( $row[ 'id' ] );
+                $education = self::_get_education( $row[ 'id' ] ); // Get educational background.
                 if( $education->num_rows > 0 ) :
                 ?>
                     <h3 class="heading-underline">Education</h3>
@@ -557,7 +549,7 @@ if( !class_exists( __CLASS__ ) ) {
                         </ul>
                 <?php endif;
 
-                if( !empty( $row[ 'interests' ] ) ) :
+                if( !empty( $row[ 'interests' ] ) ) : // Show full list of research interests.
                     $interests = html_entity_decode( $row['interests'], ENT_QUOTES, "utf-8" );
                 ?>
                     <h3 class="heading-underline">Research Interests</h3>
@@ -569,7 +561,7 @@ if( !class_exists( __CLASS__ ) ) {
 
                 <?php endif;
 
-                if( !empty( $row[ 'research' ] ) ) :
+                if( !empty( $row[ 'research' ] ) ) : // Show recent research.
                     $research = html_entity_decode( $row['research'], ENT_QUOTES, "utf-8" );
                 ?>
                     <h3 class="heading-underline">Recent Research Activities</h3>
@@ -582,6 +574,7 @@ if( !class_exists( __CLASS__ ) ) {
                 
                 <?php endif;
 
+                // Get and display publications, if the user has listed any in Manager.
                 $publications = self::_get_publications( self::parse_int( $row[ 'id' ] ) );
                 if( $publications->num_rows > 0 ) :
                 ?>
@@ -610,7 +603,7 @@ if( !class_exists( __CLASS__ ) ) {
                         </ul>
                 <?php endif; ?>
 
-                <?php if( !empty($courseHTML = self::_get_course_list( self::parse_int( $row[ 'id' ] ) ) ) ) : ?>
+                <?php if( !empty($courseHTML = self::_get_course_list( self::parse_int( $row[ 'id' ] ) ) ) ) : // Get a list of courses the staff member is teaching, if any. ?>
                     
                     <h3 class="heading-underline">Courses</h3>
                     <?= $courseHTML ?>
@@ -619,8 +612,10 @@ if( !class_exists( __CLASS__ ) ) {
             </div>
 
             <?php
-            self::db_close();
-            return ob_get_clean();
+            
+            self::db_close(); // Close the database connection.
+
+            return ob_get_clean(); // Return the buffered HTML.
         }
 
 
@@ -659,17 +654,19 @@ if( !class_exists( __CLASS__ ) ) {
          */
         private static function _get_staff_img( $fullname, string $filename = "profilephoto.jpg", string $extra = "", int $size = 5 ) : string {
 
+            // Set the base URL and classes we want every image to have.
             $resize_url = "https://cah.ucf.edu/common/resize.php";
             $classes = array( 'img-circle', 'mr-3' );
 
+            // Add the extra class for the blank, generic silhouette photo.
             if( $filename == 'profilephoto.jpg' ) array_push( $classes, 'd-flex' );
 
-            ob_start();
+            ob_start(); // Start output buffer and create <img> tag to return.
             ?>
             <img class="<?= implode( " ", $classes ); ?>" src="<?= $resize_url ?>?filename=<?= $filename ?><?= $extra ?>&sz=<?= $size ?>" alt="<?= $fullname ?>">
             <?php
 
-            return ob_get_clean();
+            return ob_get_clean(); // Return buffered HTML
         }
 
 
@@ -692,16 +689,16 @@ if( !class_exists( __CLASS__ ) ) {
             $phone = preg_replace( "/[^0-9]/", "", $phone );
             switch( strlen( $phone ) ) {
 
-                case 7:
+                case 7: // It's a "local" number, without an area code or country code.
                     return preg_replace( "/(\d{3})(\d{4})/", "$1-$2", $phone );
                     break;
-                case 10:
+                case 10: // It's a US number with area code, but no country code.
                     return preg_replace( "/(\d{3})(\d{3})(\d{4})/", "($1) $2-$3", $phone );
                     break;
-                case 11:
+                case 11: // It's a US number with the leading country code, as well.
                     return preg_replace( "/(\d)(\d{3})(\d{3})(\d{4})/", "+$1 ($2) $3-$4", $phone );
                     break;
-                default:
+                default: // It's not a US number, so just bounce it back.
                     return $phone;
                     break;
             }
@@ -720,8 +717,10 @@ if( !class_exists( __CLASS__ ) ) {
          */
         private static function _office_location( $room_id ) {
 
+            // If we've gotten this far, we've definitely instantiated the FSQLib object.
             $sql = self::$query_lib->get_query_str( FSQEnum::USER_OFFICE, $room_id );
 
+            // If we find stuff, we only care about the first row (there should only be one anyway).
             if( $result = self::_run_query( $sql ) ) {
                 $row = mysqli_fetch_assoc( $result );
                 mysqli_free_result( $result );
@@ -743,8 +742,10 @@ if( !class_exists( __CLASS__ ) ) {
          */
         private static function _get_education( $user_id ) {
 
+            // Again, if we're here, we already have this.
             $sql = self::$query_lib->get_query_str( FSQEnum::USER_EDU, $user_id );
 
+            // Do the thing! (A lot of these helper functions look alike.)
             if( $result = self::_run_query( $sql ) ) return $result;
             else return FALSE;
         }
@@ -763,8 +764,10 @@ if( !class_exists( __CLASS__ ) ) {
          */
         private static function _get_publications( $user_id, bool $approved = TRUE ) {
 
+            // Grab the query library object and get some SQL.
             $sql = self::$query_lib->get_query_str( FSQEnum::USER_PUB, $user_id, $approved );
 
+            // Run the query.
             if( $result = self::_run_query( $sql ) ) return $result;
             else return FALSE;
         }
@@ -791,19 +794,23 @@ if( !class_exists( __CLASS__ ) ) {
          */
         private static function _get_course_list( $user_id = 0, $term = "", $career = "", $catalog_ref_filter_any = "", $catalog_ref_filter_none = "", $prefix_filter_any = "" ) {
 
-            $terms = array();
-            $term_courses = array();
-            $current_term = "";
+            // Initialize some stuff, since we'll be referring to it throughout:
 
-            $sql_term = "";
-            $sql_aux = "";
+            $terms = array(); // Will be a list of the terms we'll be grabbing courses for
+            $term_courses = array(); // Will be a list of the courses, sorted by term
+            $current_term = ""; // The current term, so we know where to begin.
 
-            $summer_flag = FALSE;
+            $sql_term = ""; // Beginning of SQL statement we'll be using later on
+            $sql_aux = ""; // End of the same string.
 
+            $summer_flag = FALSE; // Checks whether to display/look for summer courses.
+
+            // The location where we keep what syllabi we have.
             $syllabus_url_base = "https://cah.ucf.edu/common/files/syllabi/";
 
-            $career = "";
+            $career = ""; // Graduate or Undergraduate, in case we need to narrow things down.
 
+            // If we don't have a target term, get the current one, then get the others.
             if( empty( $term ) ) {
                 $sql = self::$query_lib->get_query_str( FSQEnum::TERM_GET );
                 $result = self::_run_query( $sql );
@@ -812,10 +819,10 @@ if( !class_exists( __CLASS__ ) ) {
 
                     if( $row[ 'term' ] != '-' ) {
 
-                        array_push( $terms, $row[ 'term' ] );
+                        array_push( $terms, $row[ 'term' ] ); // Add to the array
 
                         if( empty( $sql_term ) ) {
-                            $sql_term = "`term` IN (";
+                            $sql_term = "`term` IN ("; // Define the SQL
 
                         } else {
                             $sql_term .= ",";
@@ -824,49 +831,62 @@ if( !class_exists( __CLASS__ ) ) {
                     }
                 }
 
-                if( !empty( $sql_term ) ) $sql_term .= ") ";
+                if( !empty( $sql_term ) ) $sql_term .= ") "; // Close the parentheses, if need be
 
-                $current_term = self::_get_semester();
+                $current_term = self::_get_semester(); // Grab the current term
 
             } else {
+                // If term is defined, just add it to the $terms array and add it to the SQL
                 array_push( $terms, $term );
                 $current_term = $term;
                 $sql_term = "`term` = '" . mysqli_real_escape_string( self::db_get(), $term ) . "'";
             }
 
+            // Any course prefixes/numbers we explicitly want *in* the query
             if( !empty( $catalog_ref_filter_any ) ) {
 
                 if( !empty( $sql_filter = self::_parse_filters( $catalog_ref_filter_any ) ) )
                     $sql_aux .= " AND $sql_filter";
             }
 
+            // Any course prefixes/numbers we explicitly *don't* want in the query
             if( !empty( $catalog_ref_filter_none ) ) {
 
                 if( !empty( $sql_filter = self::_parse_filters( $catalog_ref_filter_none, FALSE ) ) )
                     $sql_aux .= " AND $sql_filter";
             }
 
+            // If we just want prefixes
             if( !empty( $prefix_filter_any ) ) {
 
                 if( !empty( $sql_filter = self::_parse_filters( $prefix_filter_any, TRUE, TRUE ) ) )
                     $sql_aux .= " AND $sql_filter";
             }
 
+            // Generate the SQL and run the query.
             $sql = self::$query_lib->get_query_str( FSQEnum::COURSE_LIST, $user_id, $sql_term, $sql_aux, $career );
             $result = self::_run_query( $sql );
             
-            if( $result->num_rows == 0) return "";
+            if( $result->num_rows == 0) {
+                mysqli_free_result( $result );
+                self::db_close();
+                return ""; // If we find nothing, we return empty.
+            }
 
+            // Iterate through the courses.
             while( $row = mysqli_fetch_assoc( $result ) ) {
 
                 $term_idx = trim( $row[ 'term' ] );
 
-                if( preg_match( "/summer/i", $term_idx ) )
+                //if( preg_match( "/summer/i", $term_idx ) )
+                if( stripos( $term_idx, "summer" ) )
                     $summer_flag = TRUE;
                 
+                // If this is the first time we're doing this, open the table and create the
+                // header row
                 if( empty( $term_courses[ $term_idx ] ) ) {
                     
-                    ob_start();
+                    ob_start(); // Start output buffer
                     ?>
                     <table class="table table-condensed table-bordered table-striped volumes" cellspacing="0" title="<?= $term_idx ?> Offered Courses">
                         <thead>
@@ -886,10 +906,10 @@ if( !class_exists( __CLASS__ ) ) {
                         </thead>
                         <tbody>
                     <?php
-                    $term_courses[ $term_idx ] = ob_get_clean();
+                    $term_courses[ $term_idx ] = ob_get_clean(); // Store buffered HTML
                 }
 
-                ob_start();
+                ob_start(); // Start output buffer again, and spit out the row.
                 ?>
                             <tr>
                                 <td><?= $row[ 'number' ] ?></td>
@@ -916,16 +936,21 @@ if( !class_exists( __CLASS__ ) ) {
                                 </td>
                             </tr>
                 <?php
-                $term_courses[ $term_idx ] .= ob_get_clean();
+                $term_courses[ $term_idx ] .= ob_get_clean(); // Store buffered HTML
             }
 
-            ob_start();
+            // Free up the memory from the result.
+            mysqli_free_result( $result );
+
+            ob_start(); // Start output buffer again, and create the nav tabs.
             ?>
             <div style="width: 100%;">
                 <ul class="nav nav-tabs" id="courseTab" role="tablist">
             <?php
             $term_labels = str_replace( " ", "", $terms );
 
+            // Using a standard for loop to avoid problems with PHP's foreach iterator getting
+            // stuck at the last item.
             for( $c = 0; $c < count( $terms ); $c++ ) {
                 ?>
                     <li class="nav-item">
@@ -940,11 +965,12 @@ if( !class_exists( __CLASS__ ) ) {
             <div class="tab-content">
             <?php
 
+            // Same thing here, for the same reason, only creating the nav panes this time
             for( $c = 0; $c < count( $terms ); $c++ ) {
                 ?>
                     <div class="pt-3 tab-pane <?= !strcmp( $current_term, $terms[ $c ] ) ? "active" : "" ?>" id="<?= $term_labels[ $c ] ?>" role="tabpanel">
 
-                <?php if( !empty( $term_courses[ $terms[ $c ] ] ) ) : ?>
+                <?php if( !empty( $term_courses[ $terms[ $c ] ] ) ) : // Print info if we've got it ?>
 
                     <?= $term_courses[ $terms[ $c ] ] ?></div>
                         </tbody>
@@ -958,9 +984,7 @@ if( !class_exists( __CLASS__ ) ) {
                 <?php endif;
             }
 
-            self::db_close();
-
-            return ob_get_clean();
+            return ob_get_clean(); // Return buffered HTML
         }
 
 
@@ -981,28 +1005,28 @@ if( !class_exists( __CLASS__ ) ) {
 
                 case 10:
                 case 11:
-                case 12:
+                case 12: // The Fall has already started, so start with Spring the following year.
                     $term = "Spring " . ( intval( $now['year'] ) + 1 );
                     break;
 
                 case 1:
-                case 2:
+                case 2: // Spring again, but without adding to the year.
                     $term = "Spring {$now['year']}";
                     break;
 
                 case 3:
                 case 4:
                 case 5:
-                case 6:
+                case 6: // The Spring semester, Summer is upcoming.
                     $term = "Summer {$now['year']}";
                     break;
 
-                default:
+                default: // Otherwise, we're focused on Fall
                     $term = "Fall {$now['year']}";
                     break;
             }
 
-            return $term;
+            return $term; // Return whatever we've come up with.
         }
 
 
@@ -1021,43 +1045,61 @@ if( !class_exists( __CLASS__ ) ) {
          * @return string $sql_filter | The additional SQL, to further refine the course query.
          */
         private static function _parse_filters( $catalog_ref, bool $in = TRUE, bool $prefix_only = FALSE ) {
-            
-            $sql_filter = "";
 
+            // Shows whether we're only looking for the prefixes, or the entire course number.
             if( $prefix_only )
                 $statement_begin = "`prefix` ";
             else
                 $statement_begin = "CONCAT( `prefix`, `catalog_number` ) ";
 
+            // If it's an array, store it.
             if( is_array( $catalog_ref ) )
                     $filters = $catalog_ref;
                 
+            // If not, make it an array and store it.
             else
                 $filters = explode( ",", $catalog_ref );
 
+            // Initialize.
             $sql_filter = "";
 
-            foreach( $filters as $filter ) {
+            foreach( $filters as $filter ) { // Go through and apply each filter.
 
                 if( !empty( $sql_filter ) ) $sql_filter .= " , ";
 
+                // Put "NOT" before "IN()" if $in === FALSE
                 else $sql_filter = $statement_begin . ( !$in ? "NOT " : "" ) . "IN(";
 
                 $sql_filter .= "'" . strtoupper( $filter ) . "'";
             }
 
+            // If we found anything, close the parentheses.
             if( !empty( $sql_filter ) ) $sql_filter .= ")";
 
+            // Return the filter part of the SQL
             return $sql_filter;
         }
 
 
+        /**
+         * Retrieves and formats a truncated version of a faculty or staff member's stated
+         * research interests. Current limit is 45 characters. Called from staff_detail().
+         * 
+         * @author Mike W. Leavitt
+         * @since 2.0.0
+         * 
+         * @param string $interests | The string drawn from the field in staff_detail().
+         * 
+         * @return string $interests_out | The formatted and normalized string of interests.
+         */
         private static function _interests_short( string $interests ) {
 
+            // If it's formatted as an unordered list, do this:
             if( stripos( $interests, "<ul>" ) !== FALSE ) {
 
                 $interest_arr = array();
                 
+                // NEVER USE REGEX TO PARSE HTML
                 libxml_use_internal_errors( TRUE );
                 try {
                     $xml = new SimpleXMLElement( "<body>$interests</body>");
@@ -1072,35 +1114,33 @@ if( !class_exists( __CLASS__ ) ) {
                         array_push( $interest_arr, trim( $interest ) );
                     }
 
-                } else {
+                } else { // If something goes wrong with the parser, do it this way instead.
                     $interests = strip_tags( $interests, "<li>" );
                     $interest_arr = explode( "<li>", $interests );
                 }
 
             } else {
+                // If it's in paragraph form, strip out the tags we don't want, so we just
+                // have plain text.
                 $interests = strip_tags( $interests );
                 $interests = str_ireplace( "<p>", "", $interests );
                 $interests = str_ireplace( "</p>", "", $interests );
                 $interests = str_replace( "<br />", "", $interests );
                 $interests = str_replace( "<br>", "", $interests );
 
+                // Break up any one of the weird ways the users delimit their lists of interests.
+                // Using strpos() and substr_count() because it's cheaper than any of the preg_*
+                // family of functions.
                 if( strpos( $interests, ";" ) !== FALSE )
                     $interest_arr = explode( ";", $interests );
                 else if( strpos( $interests, "," ) !== FALSE )
                     $interest_arr = explode( ",", $interests );
                 else if( strpos( $interests, "." ) !== FALSE && ( substr_count( $interests, "." ) > 1 || strpos( $interests, ".", -1 ) === FALSE ) )
                     $interest_arr = explode( ".", $interests );
-                
-                /*
-                if( preg_match( "/;/", $interests ) )
-                    $interest_arr = explode( "; ", $interests );
-                else if ( preg_match( "/,/", $interests ) )
-                    $interest_arr = explode( ", ", $interests );
-                else if ( preg_match_all( "/./", $interests) !== FALSE && !( preg_match_all( "/./", $interests ) == 1 && preg_match( "/.$/", $interests ) ) ) {
-                    $interest_arr = explode( ". ", $interests );
-                */
             }
 
+            // Format everything nicely, with commas and stuff, putting in an ellipsis if the
+            // list isn't complete.
             $interests_out = "";
             foreach( $interest_arr as $idx => $interest ) {
 
@@ -1111,23 +1151,16 @@ if( !class_exists( __CLASS__ ) ) {
                     break;
                 }
 
-                if( strlen( $interests_out ) >= 30 /*|| strlen( $interests_out ) + strlen( $interest ) >= 45 */ ) { 
+                if( strlen( $interests_out ) >= 45 ) { 
                     $interests_out .= "&hellip;";
                     break;
 
                 } else {
                     $interests_out .= ", ";
                 }
-                /*
-                if( strlen( $interests_out ) < 25 && $idx + 1 != count( $interest_arr ) )
-                    $interests_out .= $interest . ", ";
-                else if ( $idx + 1 == count( $interest_arr ) )
-                    $interests_out .= $interest . ".";
-                else
-                    $interests_out .= "&hellip;";
-                */
             }
 
+            // Return the shiny, new formatted string.
             return $interests_out;
         }
     }

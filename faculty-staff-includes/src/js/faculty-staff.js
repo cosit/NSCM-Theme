@@ -52,15 +52,14 @@
 
     $(document).ready( $ => {
 
-        $('.dropdown-menu a:first-child').addClass('active');
-        $('.dropdown-menu').dropdown('toggle');
+        $('.nav.flex-column .nav-item:first-child .nav-link').addClass('active');
         $('#courseTab ul li:first-child a').tab('show');
 
         getStaff();
 
-        $('.dropdown-menu a').click( function(e) {
+        $('.nav-link').click( function(e) {
             e.preventDefault();
-            $('.dropdown-menu a').removeClass('active');
+            $('.nav-link').removeClass('active');
             $(this).addClass('active');
             const textClicked = $(this).text();
 

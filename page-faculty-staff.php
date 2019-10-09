@@ -16,38 +16,44 @@ get_header();
 <div class="container mb-5 mt-3 mt-lg-5" style="min-height: 250px;">
     <div class="container">
         <div class="row">
-            <div class="col-12">
-                <p id="print-result"></p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-3" id="dept-menu-div">
-                <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="sub_dept" data-toggle="dropdown" auto-close="disabled">
-                        Filter
-                    </button>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" id="0">A&ndash;Z List</a>
-                        <a class="dropdown-item" id="1">Administration</a>
-                        <a class="dropdown-item" id="2">Advising</a>
+            <div class="col-md-4" id="dept-menu-div">
+                <nav role="navigation">
+                    <ul class="nav flex-column nav-pills nav-justified">
+                        <li class="nav-item">
+                            <a class="nav-link" id="0">
+                                <p>A&ndash;Z List</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="1">
+                                <p>Administration</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="2">
+                                <p>Advising</p>
+                            </a>
+                        </li>
                         <?php
                         if( $result = FSH::get_menu_categories() ) {
-
                             while( $row = mysqli_fetch_assoc( $result ) ) {
-                                
-                                if( preg_match( "/Advising/i", $row['description'] ) ) continue;
+                                if( stripos( $row[ 'description' ], "Advising" ) ) continue;
 
                                 $desc = strlen( $row['description'] ) <= 30 ? $row['description'] : $row['short_description'];
                                 ?>
-                                <a class="dropdown-item" id="<?= intval( $row[ 'id' ] ) ?>"><?= $desc ?></a>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="<?= intval( $row['id'] ) ?>">
+                                        <p><?= $desc ?></p>
+                                    </a>
+                                </li>
                                 <?php
                             }
                         }
                         ?>
-                    </div>
-                </div>
+                    </ul>
+                </nav>
             </div>
-            <div class="col-md-9" id="cah-faculty-staff">
+            <div class="col-md-8" id="cah-faculty-staff">
             </div>
         </div>
     </div>
