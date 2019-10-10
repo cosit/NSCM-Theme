@@ -35,7 +35,7 @@ if( !class_exists( __CLASS__ ) ) {
          * 
          * @return void
          */
-        public static function action_hooks() : void {
+        public static function action_hooks() {
             add_action( 'wp_enqueue_scripts', array( __CLASS__, 'load_scripts' ), 9, 0 );
             add_action( 'wp_default_scripts', array( __CLASS__, 'jquery_footer' ), 5, 1 );
             add_action( 'wp_ajax_print_faculty_staff', array( __CLASS__, 'print_faculty' ), 10, 0 );
@@ -51,7 +51,7 @@ if( !class_exists( __CLASS__ ) ) {
          * 
          * @return void
          */
-        public static function load_scripts() : void {
+        public static function load_scripts() {
 
             // Don't want to load this if we're in the Dashboard.
             if( is_admin() ) return;
@@ -87,7 +87,7 @@ if( !class_exists( __CLASS__ ) ) {
          * 
          * @return void
          */
-        public static function jquery_footer( $wp_scripts ) : void {
+        public static function jquery_footer( $wp_scripts ) {
 
             // We don't want to load this if we're in the Dashboard.
             if( is_admin() ) return;
@@ -173,7 +173,7 @@ if( !class_exists( __CLASS__ ) ) {
          * 
          * @return void
          */
-        public static function db_close() : void {
+        public static function db_close() {
             global $db_connection;
 
             // If there's a database connection, close it, and set the global to FALSE.
