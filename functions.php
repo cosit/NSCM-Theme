@@ -1,5 +1,13 @@
 <?php
 
+define( "DEPT", 37 );
+
+require_once 'faculty-staff-includes/dbconfig.php';
+require_once 'faculty-staff-includes/query-ref.php';
+require_once 'faculty-staff-includes/query-lib.php';
+require_once 'faculty-staff-includes/faculty-staff-functions.php';
+//require_once 'faculty-staff-includes/print-faculty.php';
+
 add_action( 'wp_enqueue_scripts', 'college_theme_parent_style' );
 function college_theme_parent_style() {
 	
@@ -234,3 +242,7 @@ function posts_link_attributes() {
 }
 add_filter('next_posts_link_attributes', 'posts_link_attributes');
 add_filter('previous_posts_link_attributes', 'posts_link_attributes');
+
+// Functions to handle loading resources for the faculty/staff page
+add_action( 'init', array( 'FacultyStaffHelper', 'action_hooks' ), 10, 0 );
+?>
