@@ -308,11 +308,11 @@ if( !class_exists( __CLASS__ ) ) {
             $sql = "";
 
             // 1 is for Administration
-            if( $sub_dept === 1 ) 
+            if( $sub_dept === -1 ) 
                 $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_ADMIN );
 
             // 2 is for Advising
-            else if( $sub_dept === 2 )
+            else if( $sub_dept === -2 )
                 $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_STAFF );
 
             // This catches any of the department-specific subdepartments
