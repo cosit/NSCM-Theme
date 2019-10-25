@@ -60,7 +60,7 @@ if( !class_exists( __CLASS__ ) ) {
             wp_enqueue_style( 'faculty-staff-style', get_stylesheet_directory_uri() .'/faculty-staff-includes/static/css/faculty-staff.min.css' );
 
             // Load our JS. Come on, you know how this works by now... :P
-            wp_enqueue_script( 'faculty-staff-script', get_stylesheet_directory_uri() . '/faculty-staff-includes/static/js/faculty-staff.min.js', array( 'jquery', 'script' ), '1.0.0', TRUE );
+            wp_enqueue_script( 'faculty-staff-script', get_stylesheet_directory_uri() . '/faculty-staff-includes/static/js/faculty-staff.min.js', array( 'jquery', 'script' ), '1.0.1', TRUE );
 
             // Stuff to pass to our page's JavaScript. The "security" field is a nonce
             // we're creating to make sure it's still the user making requests on the
@@ -365,7 +365,7 @@ if( !class_exists( __CLASS__ ) ) {
                                 <div class="media">
                                 <?= self::_get_staff_img( //Get image
                                     $row[ 'fullname' ], 
-                                    ( !empty( $row[ 'photo_path' ] )  ? $row[ 'photo_path' ]  : "446.jpg" ), 
+                                    ( !empty( $row[ 'photo_path' ] )  ? $row[ 'photo_path' ]  : "profilephoto.jpg" ), 
                                     ( !empty( $row[ 'photo_extra' ] ) ? $row[ 'photo_extra' ] : "" ), 
                                     5
                                 ); 
@@ -378,7 +378,7 @@ if( !class_exists( __CLASS__ ) ) {
 
                             <?php
                             
-                            $title = isset( $row['title_dept-short'] ) ? $row['title_dept_short'] : $row['title'];
+                            $title = !empty( $row['title_dept_short'] ) || !empty( $row['title_dept'] ) ? ( !empty( $row['title_dept_short'] ) ? $row['title_dept_short'] : $row['title_dept'] ) : $row['title'];
 
                             // Back to non-A-Z List stuff.
                             if( $format ) :
@@ -420,9 +420,7 @@ if( !class_exists( __CLASS__ ) ) {
                                         
                             <?php else : ?>
                                         <small>
-                                            <span class="staff-title">
-                                                <em><?= $title ?></em>
-                                            </span><br />
+                                            <p class="staff-title"><em><?= $title ?></em></p>
                                             <?= $row[ 'email' ] ?><br />
                                             <?= isset( $row[ 'phone' ] ) ? self::_format_phone_us( $row[ 'phone' ] ) : "" ?>
                                         </small>

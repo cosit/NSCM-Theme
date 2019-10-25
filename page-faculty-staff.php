@@ -29,12 +29,12 @@ get_header();
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" id="1">
+                                <a class="nav-link" id="-1">
                                     <p>Administration</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" id="2">
+                                <a class="nav-link" id="-2">
                                     <p>Advising</p>
                                 </a>
                             </li>

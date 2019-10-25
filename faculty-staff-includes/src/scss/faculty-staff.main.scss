@@ -20,6 +20,13 @@
         object-position: 0 0;
         border-radius: 50%;
     }
+
+    .img-circle.rounded {
+        object-position: 50% 0;
+        height: 105px;
+        width: 105px;
+        border-radius: .25rem;
+    }
 }
 
 .cah-staff-list {
@@ -38,7 +45,7 @@
 
         .staff-title {
             font-size: 1.1em;
-            line-height: 16px;
+            line-height: 14px;
             margin: 0;
         }
 
@@ -46,11 +53,46 @@
             margin-top: .3em;
             line-height: 16px;
         }
+
+        p {
+            margin-bottom: .2em;
+        }
+
+        .media {
+            .media-body {
+                line-height: 1.2;
+
+                p {
+                    margin-bottom: .5em;
+                }
+
+                .fs-list {
+                    font-size: 90%;
+                    line-height: 18px;
+
+                    p {
+                        margin-bottom: .4em;
+                    }
+
+                    .staff-title {
+                        line-height: 16px;
+                    }
+                }
+            }
+        }
     }
 }
 
 .staff-detail {
     font-size: 90% !important;
+    
+    .media {
+        width: 100%;
+    }
+}
+
+.staff-info {
+    width: 100%;
 }
 
 #dept-menu-div {
@@ -77,9 +119,4 @@
             }
         }
     }
-}
-
-.fs-list {
-    font-size: 90%;
-    line-height: 18px;
 }
