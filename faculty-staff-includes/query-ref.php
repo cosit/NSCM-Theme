@@ -14,15 +14,14 @@ if( !class_exists( 'FacultyStaffQueryRef' ) ) {
 
         const DEPT_ALL = 1;
         const DEPT_ADMIN = 2;
-        const DEPT_STAFF = 3;
-        const DEPT_SUB_GENERAL = 4;
-        const DEPT_USER = 5;
-        const USER_OFFICE = 6;
-        const USER_EDU = 7;
-        const USER_PUB = 8;
-        const TERM_GET = 9;
-        const COURSE_LIST = 10;
-        const ACAD_CATS = 11;
+        const DEPT_SUB_GENERAL = 3;
+        const DEPT_USER = 4;
+        const USER_OFFICE = 5;
+        const USER_EDU = 6;
+        const USER_PUB = 7;
+        const TERM_GET = 8;
+        const COURSE_LIST = 9;
+        const ACAD_CATS = 10;
     }
 }
 ?>

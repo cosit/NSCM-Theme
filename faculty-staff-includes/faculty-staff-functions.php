@@ -57,10 +57,10 @@ if( !class_exists( __CLASS__ ) ) {
             if( is_admin() ) return;
 
             // Load our CSS
-            wp_enqueue_style( 'faculty-staff-style', get_stylesheet_directory_uri() .'/faculty-staff-includes/static/css/faculty-staff.min.css' );
+            wp_enqueue_style( 'faculty-staff-style', get_stylesheet_directory_uri() .'/faculty-staff-includes/static/css/faculty-staff.min.css', array(), '1.0.2' );
 
             // Load our JS. Come on, you know how this works by now... :P
-            wp_enqueue_script( 'faculty-staff-script', get_stylesheet_directory_uri() . '/faculty-staff-includes/static/js/faculty-staff.min.js', array( 'jquery', 'script' ), '1.0.1', TRUE );
+            wp_enqueue_script( 'faculty-staff-script', get_stylesheet_directory_uri() . '/faculty-staff-includes/static/js/faculty-staff.min.js', array( 'jquery', 'script' ), '1.0.2', TRUE );
 
             // Stuff to pass to our page's JavaScript. The "security" field is a nonce
             // we're creating to make sure it's still the user making requests on the
@@ -308,12 +308,12 @@ if( !class_exists( __CLASS__ ) ) {
             $sql = "";
 
             // 1 is for Administration
-            if( $sub_dept === -1 ) 
-                $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_ADMIN );
+            if( $sub_dept === 60 ) 
+                $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_ADMIN, $sub_dept );
 
             // 2 is for Advising
-            else if( $sub_dept === -2 )
-                $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_STAFF );
+            else if( $sub_dept === 61 )
+                $sql = self::$query_lib->get_query_str( FSQEnum::DEPT_SUB_GENERAL, $sub_dept );
 
             // This catches any of the department-specific subdepartments
             else if( $sub_dept !== 0 )
