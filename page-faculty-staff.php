@@ -28,16 +28,6 @@ get_header();
                                     <p>A&ndash;Z List</p>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" id="-1">
-                                    <p>Administration</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" id="-2">
-                                    <p>Advising</p>
-                                </a>
-                            </li>
                             <?php
                             if( $result = FSH::get_menu_categories() ) {
                                 while( $row = mysqli_fetch_assoc( $result ) ) {

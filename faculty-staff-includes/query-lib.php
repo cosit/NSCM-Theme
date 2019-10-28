@@ -18,9 +18,6 @@ if( !class_exists( 'FacultyStaffQueryLib' ) ) {
         // Member variable to hold Dept number and the base query string.
         private $dept, $query_base;
 
-        // Array of academic advising positions for the "Advising" query section.
-        private $advisor_positions = array( 53, 67, 84, 85, 121, 152, 153, 154, 155, 156, 157, 166, 185, 186, 187, 197 );
-
 
         /**
          * Constructor. Accepts Department ID number.
@@ -65,9 +62,6 @@ if( !class_exists( 'FacultyStaffQueryLib' ) ) {
 
                 case QEnum::DEPT_ADMIN :
                     return self::_dept_admin( ... $args );
-
-                case QEnum::DEPT_STAFF :
-                    return self::_dept_staff( ... $args );
 
                 case QEnum::DEPT_SUB_GENERAL :
                     return self::_dept_sub_general( ... $args );
@@ -124,26 +118,11 @@ if( !class_exists( 'FacultyStaffQueryLib' ) ) {
          * 
          * @return string (anon) | The administrative staff query string.
          */
-        private function _dept_admin( ... $args ) : string {
-            $sql = $this->query_base . " AND t.title_group IN( 'Administrative Faculty' ) ORDER BY u.lname";
+        private function _dept_admin( int $sub_dept, ... $args ) : string {
+            $sql = $this->_dept_sub_general( $sub_dept );
 
             // Here we filter the results as normal, but then reshuffle them so the Dean's List candidates ar first.
             return "SELECT * FROM ( $sql ) AS NSCM_Admin ORDER BY (CASE WHEN title = 'Director' THEN 0 WHEN title != 'Director' THEN 1 END)";
-        }
-
-
-        /**
-         * Gets Advising staff.
-         * 
-         * @author Mike W. Leavitt
-         * @since 1.0.0
-         * 
-         * @param array $args | Anny extra arguments passed to the function. Ignored here.
-         * 
-         * @return string (anon) | The Advising staff query string.
-         */
-        private function _dept_staff( ... $args ) : string {
-            return $this->query_base . " AND u_d.title_id IN( " . implode( ", ", $this->advisor_positions ) . " ) ORDER BY u.lname";
         }
 
 

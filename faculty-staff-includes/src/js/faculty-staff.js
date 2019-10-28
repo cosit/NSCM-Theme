@@ -10,6 +10,8 @@
     // Setting prefabs for boilerplate HTML
     const hTxtBeg = '<h2 class="pl-2 mb-4 heading-underline">',
         hTxtEnd = '</h2>';
+
+    const loadingImg = $('<div></div>').attr({id: 'loading-img', class: 'mt-5'});
     
     
     /**
@@ -25,6 +27,10 @@
      * @return {void}
      */
     const getStaff = (text = 'A&ndash;Z List', sub = 0, uId = 0) => {
+
+        // Display the little "loading" gif, so the user understands that
+        // the data is coming.
+        $('#cah-faculty-staff').html('').append(loadingImg);
 
         // Setting the data we'll send.
         const postData = {
