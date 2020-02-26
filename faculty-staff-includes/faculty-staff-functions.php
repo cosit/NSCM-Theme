@@ -346,6 +346,8 @@ if( !class_exists( __CLASS__ ) ) {
          */
         public static function print_staff( $result, bool $format = FALSE ) : string {
 
+            $faculty_displayed = array();
+
             ob_start(); // Starts an output buffer, so I can write clearer HTML.
             ?>
             <div class="row">
@@ -353,6 +355,14 @@ if( !class_exists( __CLASS__ ) ) {
             
             // Iterate through all the entries.
             while( $row = mysqli_fetch_assoc( $result ) ) {
+
+                if( isset( $faculty_displayed["{$row['id']}"] ) ) {
+                    continue;
+                }
+                else {
+                    $faculty_displayed["{$row['id']}"] = 1;
+                }
+
                 ?>
                 <div class="col-lg-6 col-md-12">
                     <div class="cah-staff-list">
