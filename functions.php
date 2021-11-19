@@ -7,6 +7,7 @@ require_once 'faculty-staff-includes/query-ref.php';
 require_once 'faculty-staff-includes/query-lib.php';
 require_once 'faculty-staff-includes/faculty-staff-functions.php';
 //require_once 'faculty-staff-includes/print-faculty.php';
+include_once 'includes/child-header-functions.php';
 
 add_action( 'wp_enqueue_scripts', 'college_theme_parent_style' );
 function college_theme_parent_style() {
@@ -245,4 +246,12 @@ add_filter('previous_posts_link_attributes', 'posts_link_attributes');
 
 // Functions to handle loading resources for the faculty/staff page
 add_action( 'init', array( 'FacultyStaffHelper', 'action_hooks' ), 10, 0 );
+
+/**
+ * Set the excerpt_length to 20 words instead of 55
+ */
+function custom_excerpt_length( $length ) {
+	return 30;
+}
+add_filter( 'excerpt_length', 'custom_excerpt_length', 999 );
 ?>
