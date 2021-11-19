@@ -1,7 +1,6 @@
 <?php
 /**
- * Template Name: Basic
- * Template Post Type: degree
+ * Display Search Results
  */
 ?>
 <?php get_header(); ?>
@@ -39,7 +38,7 @@ if (have_posts() ):
 									if( $post_type === 'post' )
 										echo "<div class='news-section-title'>".get_the_category_list()."</div>"; ?>
 							</div>
-							<?php the_excerpt(); ?>
+							<a href="<?php esc_url(the_permalink()); ?>"><?php the_excerpt(); ?></a>
 						</div>
 					</div>
 				</article>

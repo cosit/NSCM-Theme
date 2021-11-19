@@ -4,7 +4,7 @@ Theme URI:		https://github.com/cosit/NSCM-Theme
 Description:	Nicholson School of Communication and Media Theme
 Author:			Mannong Pang / Jonathan Hendricker
 Template:		Colleges-Theme
-Version:		1.0.18
+Version:		1.0.19
 License:		GNU General Public License v2 or later
 License URI:	http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain:	Nicholson School of Communication and Media Theme
@@ -134,20 +134,32 @@ Text Domain:	Nicholson School of Communication and Media Theme
     word-wrap: break-word;
     hyphens: auto;
 }
-.ucf-news-item-content .post-categories {
+.search .ucf-news-item-content h5,
+.category .ucf-news-item-content h5 {
+	margin-bottom: 0.25rem;
+}
+.search .ucf-news-item-content .post-categories,
+.category .ucf-news-item-content .post-categories {
 	padding-left:0; 
-	margin-top: 0.5rem;
+	margin-top: 0.25rem;
 	margin-bottom: 0;
+}
+.search .ucf-news-item-content .date,
+.category .ucf-news-item-content .date {
+	font-size: 0.875em;
 }
 .ucf-news-item-content .post-categories li {
 	background: #fc0;
 	color: #000;
 	display: inline-block;
-	padding: 2px 14px;
-	margin-bottom: 0.75rem;
-	font-size: 0.80rem;
+	padding: 2px 8px;
+	margin-bottom: 0.5rem;
+	font-size: 0.75rem;
+	text-transform: uppercase;
 }
-.ucf-news-item-content .post-categories li a {
+.ucf-news-item-content .post-categories li a,
+.category .ucf-news.modern .ucf-news-item a,
+.search .ucf-news.modern .ucf-news-item a {
 	color: #000;
 }
 
@@ -156,16 +168,7 @@ Text Domain:	Nicholson School of Communication and Media Theme
 	margin-bottom: 0.5rem;
 	margin-top: 0.5rem;
   }
-  .post-categories a, .post-tags a {
-	margin-right: 0.25rem;
-  }
-  .post-categories a:first-of-type, 
-  .post-tags a:first-of-type {
-	margin-left: 0.25rem;
-  }
-  .post-categories a:last-of-type{
-	margin-right: 0.75rem;
-  }
+
   .page-numbers  {
 	  position: relative;
 	  display: inline-block;
@@ -186,68 +189,3 @@ Text Domain:	Nicholson School of Communication and Media Theme
 	  border-color: #dddddd;
 	  text-decoration: none;;
   }
-
-/*  Category styling after UCF News  */
-.category .ucf-news-modern .ucf-news-item-label, 
-.category .ucf-news-modern .ucf-news-section-title, 
-.category .ucf-news.modern .ucf-news-item-label, 
-.category .ucf-news.modern .ucf-news-section-title,
-.category .ucf-news.modern .ucf-news-item .post-categories a,
-.category .ucf-news-modern .ucf-news-item .post-categories a,
-.category .ucf-news.modern .ucf-news-item .post-tags a,
-.category .ucf-news-modern .ucf-news-item .post-tags a {
-	font-family: "Gotham SSm A","Gotham SSm B","UCF Sans Serif Alt","Helvetica Neue",Arial,sans-serif;  
-    font-style: normal;
-    font-weight: 400;
-    background-color: #ffc904;
-    color: #000;
-    display: inline-block;
-    font-size: 0.75em;
-    letter-spacing: 1.5px;
-    margin: 0 0 10px;
-    padding: 2px 15px;
-    text-transform: uppercase;
-}
-.category .ucf-news-modern .ucf-news-item-title, 
-.category .ucf-news.modern .ucf-news-item-title {
-	font-family: "Gotham SSm A","Gotham SSm B","UCF Sans Serif Alt","Helvetica Neue",Arial,sans-serif;    
-    font-weight: 700;
-   	font-size: 20px;
-    line-height: 1.25;
-    margin: 0;
-}
-.category .ucf-news-modern .ucf-news-item-title a, 
-.category .ucf-news.modern .ucf-news-item-title a,
-.category .ucf-news-modern .ucf-news-item a, 
-.category .ucf-news.modern .ucf-news-item a  {
-	color: #000;
-}
-.category .ucf-news.modern .ucf-news-section-title {
-	text-transform: uppercase;
-	font-size: 0.75em;
-}
-.featured-news-home h5 a {
-	font-size: 20px;
-	color: #000000;
-}
-.category .ucf-news.modern .ucf-news-item {
-  margin-bottom: 0;
-}
-.category .ucf-news.modern .ucf-news-item-content {
-  width: 72%;
-}
-
-.category .ucf-news.modern .ucf-news-item .post-categories a,
-.category .ucf-news-modern .ucf-news-item .post-categories a,
-.category .ucf-news.modern .ucf-news-item .post-tags a,
-.category .ucf-news-modern .ucf-news-item .post-tags a {
-	padding: 2px 8px;
-}
-@media only screen and (max-width: 600px) {
-	.category .ucf-news.modern .ucf-news-thumbnail {
-		width: 100%;
-	}	
-	.category .ucf-news.modern .ucf-news-item-content {
-		width: 100%;
-	}
-}
