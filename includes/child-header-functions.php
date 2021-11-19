@@ -37,8 +37,8 @@ function child_get_header_title( $obj ) {
 		}
 	}
 	elseif ( is_category() ) {
-		$title = __( 'Category:' );
-		$title = single_term_title( '', false );
+		$title = __( 'Category: ' );
+		$title .= single_term_title( '', false );
 	}
 	elseif ( is_tag() ) {
 		$title = __( 'Tag:' );
