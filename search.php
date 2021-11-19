@@ -45,10 +45,20 @@ if (have_posts() ):
 				</article>
 			</div>
 		<?php endwhile; ?>
-		<div class="pagination">
-			<div class="nav-previous alignleft page-item"><?php previous_posts_link( 'Previous' ); ?></div>
-			<div class="nav-next alignright page-item"><?php next_posts_link( 'Next' ); ?></div>
-		</div>
+		<?php 
+		$args = array(
+			'mid_size'  => 1,
+			'prev_next' => true,
+			'prev_text' => 'Previous',
+			'next_text' => 'Next',
+			'type'      => 'plain',
+			'screen_reader_text' => __( 'Posts navigation' ),
+		);
+		// Generate paginated link markup
+		$links = paginate_links( $args );
+
+		if( $links ) echo $links;
+	?>
 	</div>
 <?php else: ?>
 	<div><h5>Sorry, no results matched your criteria.</h5></div>
