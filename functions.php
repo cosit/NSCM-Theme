@@ -201,7 +201,8 @@ function get_header_subtitle( $obj ) {
 }
 
 /**
- * Generate custom search form using Athena Framework and Bootstrap
+ * Generate custom search form using Athena Framework and Bootstrap.
+ * Only returns results with the post CPT
  *
  * @param string $form Form HTML.
  * @return string Modified form HTML.
@@ -209,6 +210,7 @@ function get_header_subtitle( $obj ) {
 function nscm_my_search_form( $form ) {
     $form = '<form role="search" method="get" id="searchform" class="form-inline" action="' . home_url( '/' ) . '" >
     <div class="input-group w-100"><input type="text" value="' . get_search_query() . '" name="s" id="s" class="form-control" placeholder="Search for" />
+	<input type="hidden" value="post" name="post_type" id="post_type" />
     <div class="input-group-append"><button type="submit" id="searchsubmit" value="'. esc_attr__( 'Search' ) .'" class="btn btn-primary" />Search</button></div>
     </div>
     </form><hr class="mt-5 mb-4"/>';
@@ -248,10 +250,18 @@ add_filter('previous_posts_link_attributes', 'posts_link_attributes');
 add_action( 'init', array( 'FacultyStaffHelper', 'action_hooks' ), 10, 0 );
 
 /**
- * Set the excerpt_length to 20 words instead of 55
+ * Set the excerpt_length to 25 words instead of 55
  */
 function custom_excerpt_length( $length ) {
-	return 30;
+	return 25;
 }
 add_filter( 'excerpt_length', 'custom_excerpt_length', 999 );
+
+/**
+ * Set the end of the excerpt to '...' instead of [...]
+ */
+add_filter('excerpt_more', function($more) {
+	return '...';
+});
+
 ?>
