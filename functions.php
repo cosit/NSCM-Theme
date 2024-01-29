@@ -345,12 +345,12 @@ if ( !function_exists( 'ucf_post_list_display_modern' ) ) {
 			$category_output = '';
 			if ( ! empty( $categories ) ) {
 				foreach( $categories as $category ) {
-					$category_output .= '<span class="badge badge-primary mb-1">' . esc_html( $category->name ) . '</span>' . $separator;
+					if ( esc_html( $category->name ) === "Uncategorized" ) continue; 
+					$category_output .= '<span class="badge badge-primary fs-sm mb-2">' . esc_html( $category->name ) . '</span>' . $separator;
 				}				
 			}
 
-			// Calling a newly created function to handle getting the image. This differs from the default because 
-			// it returns a specific size for the fallback image and not the full size.
+			// Calling a newly created function to handle getting the image based on a size. 
 			$item_img = nscm_get_image_or_fallback( $item, $size );
 			//$item_img_srcset = UCF_Post_List_Common::get_image_srcset( $item );
 						
@@ -363,24 +363,25 @@ if ( !function_exists( 'ucf_post_list_display_modern' ) ) {
 
 				<div class="media">
 					<?php if ( $item_img ) : ?>
-					<div class=" d-flex w-25 mr-3" style="max-width: 150px;">
+					<div class=" d-flex mr-3" style="max-width: 150px;">
 						<img src="<?php echo $item_img; ?>" class="ucf-post-list-thumbnail-image" alt="<?php echo $item->post_title; ?>">
 					</div>
 					<?php endif; ?>
 					<div class=" media-body">
-						<div>
+
+						<?php 
+							echo ( !empty($category_output) ? "<div>".trim( $category_output, $separator )."</div>" : '' );
+						?>
 							<a class="d-block stretched-link text-decoration-none h5 mb-0 pb-1" href="<?php echo get_permalink( $item->ID ); ?>" style="color: inherit;">
 								<?php echo $item->post_title; ?>
 							</a>
 							<?php 
-								echo ( !empty($category_output) ? "<div class='font-size-sm'>".trim( $category_output, $separator )."</div>" : '' );
-
 								echo ( !empty($date) ? "<div class='font-size-sm mb-2'>$date</div>" : '' );								
 							?>								
 							<div>
 								<?php echo wp_trim_words( $item_excerpt, 25 ); ?>
 							</div>							
-						</div>
+						
 					</div>
 				</div>
 			</div>

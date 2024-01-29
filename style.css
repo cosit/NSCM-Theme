@@ -4,7 +4,7 @@ Theme URI:		https://github.com/cosit/NSCM-Theme
 Description:	Nicholson School of Communication and Media Theme
 Author:			Mannong Pang / Jonathan Hendricker
 Template:		Colleges-Theme
-Version:		1.0.22
+Version:		1.0.23
 License:		GNU General Public License v2 or later
 License URI:	http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain:	Nicholson School of Communication and Media Theme
@@ -12,6 +12,10 @@ Github Theme URI: https://github.com/cosit/NSCM-Theme
 */
 
 .ucf-post-list-item a { color:#000000; }
+
+.fs-sm {
+	font-size: 0.875rem;
+}
 
 .home-header-title {
    text-shadow: 1px 1px 4px #000;
