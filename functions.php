@@ -349,12 +349,13 @@ if ( !function_exists( 'ucf_post_list_display_modern' ) ) {
 				}				
 			}
 
-			// Calling a newly created function to handle getting the image. This differs from the default because it returns a specific size for the fallback image and not the full size.
+			// Calling a newly created function to handle getting the image. This differs from the default because 
+			// it returns a specific size for the fallback image and not the full size.
 			$item_img = nscm_get_image_or_fallback( $item, $size );
 			//$item_img_srcset = UCF_Post_List_Common::get_image_srcset( $item );
 						
-			$char_limit = $atts['excerpt_length'];
-			$item_excerpt= UCF_Post_List_Common::get_excerpt( $item, $char_limit );
+			$item_excerpt= get_the_excerpt( $item );
+			
 			?>
 
 			<div class="media-background-container hover-parent p-3 mb-3" style="margin-left: -1rem; margin-right: -1rem;">
