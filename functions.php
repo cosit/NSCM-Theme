@@ -461,4 +461,108 @@ function force_gutenberg_for_cpt( $args, $post_type ) {
     }
     return $args;
 }
+
+/**
+ * Define a Custom Color Palette for Guttenberg  
+ *
+ * @author Jonathan Hendricker
+ * @since 1.0.25
+ **/
+function nscm_custom_color_palette()
+{
+
+	$newColorPalette = [
+		[
+			'name'  => esc_html__('Black', 'cos-child-theme'),
+			'slug'  => 'cos-black',
+			'color' => '#000000',
+		],
+		[
+			'name'  => esc_html__('Dark gray', 'cos-child-theme'),
+			'slug'  => 'cos-dark-gray',
+			'color' => '#3e3e3e',
+		],
+		[
+			'name'  => esc_html__('Gray', 'cos-child-theme'),
+			'slug'  => 'cos-gray',
+			'color' => '#767676',
+		],
+		[
+			'name'  => esc_html__('Light gray', 'cos-child-theme'),
+			'slug'  => 'cos-light-gray',
+			'color' => '#efefef',
+		],
+		[
+			'name'  => esc_html__('Lighter gray', 'cos-child-theme'),
+			'slug'  => 'cos-lighter-gray',
+			'color' => '#f7f7f7',
+		],
+		[
+			'name'  => esc_html__('White', 'cos-child-theme'),
+			'slug'  => 'cos-white',
+			'color' => '#ffffff',
+		],
+		[
+			'name'  => esc_html__('Dark gold', 'cos-child-theme'),
+			'slug'  => 'cos-dark-gold',
+			'color' => '#e5b700',
+		],
+		[
+			'name'  => esc_html__('Gold', 'cos-child-theme'),
+			'slug'  => 'cos-gold',
+			'color' => '#ffc904',
+		],
+		[
+			'name'  => esc_html__('Dark blue', 'cos-child-theme'),
+			'slug'  => 'cos-dark-blue',
+			'color' => '#025aa5',
+		],
+		[
+			'name'  => esc_html__('Blue', 'cos-child-theme'),
+			'slug'  => 'cos-blue',
+			'color' => '#0275d8',
+		],
+		[
+			'name'  => esc_html__('Light blue', 'cos-child-theme'),
+			'slug'  => 'cos-light-blue',
+			'color' => '#81cfe0',
+		],
+		[
+			'name'  => esc_html__('Dark green', 'cos-child-theme'),
+			'slug'  => 'cos-dark-green',
+			'color' => '#25a25a',
+		],
+		[
+			'name'  => esc_html__('Green', 'cos-child-theme'),
+			'slug'  => 'cos-green',
+			'color' => '#2ecc71',
+		],
+		[
+			'name'  => esc_html__('Red', 'cos-child-theme'),
+			'slug'  => 'cos-red',
+			'color' => '#ff6445',
+		],
+		[
+			'name'  => esc_html__('Orange', 'cos-child-theme'),
+			'slug'  => 'cos-orange',
+			'color' => '#f4b350',
+		],
+	];
+
+	add_theme_support('editor-color-palette', $newColorPalette);
+}
+add_action('after_setup_theme', 'nscm_custom_color_palette');
+
+/**
+ * Define a Custom Color Palette for Guttenberg  
+ *
+ * @author Jonathan Hendricker
+ * @since 1.0.25
+ **/
+function nscm_gutenberg_css()
+{
+	add_theme_support('editor-styles');
+	add_editor_style('nscm-style-editor.css');
+}
+add_action('after_setup_theme', 'nscm_gutenberg_css');
 ?>
