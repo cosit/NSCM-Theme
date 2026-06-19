@@ -446,4 +446,19 @@ if ( !function_exists( 'nscm_get_image_or_fallback' ) ) {
 		return $img;
 	}
 }
+
+/**
+ * Add Guttenberg Support for UCF Sections plugin
+ *
+ * @author Jonathan Hendricker
+ * @since 1.0.24
+ **/
+add_filter( 'register_post_type_args', 'force_gutenberg_for_cpt', 10, 2 );
+function force_gutenberg_for_cpt( $args, $post_type ) {
+    // Replace 'your_cpt_slug' with the actual slug of your Custom Post Type
+    if ( 'ucf_section' === $post_type ) {
+        $args['show_in_rest'] = true; // Required for Gutenberg
+    }
+    return $args;
+}
 ?>
